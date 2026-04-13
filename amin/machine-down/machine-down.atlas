@@ -1,117 +1,166 @@
 
 machine-down.png
-size: 1085, 1085
+size: 1126, 1126
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
+boom1
+  rotate: false
+  xy: 818, 368
+  size: 172, 172
+  orig: 172, 172
+  offset: 0, 0
+  index: -1
+boom2
+  rotate: false
+  xy: 472, 506
+  size: 200, 113
+  orig: 200, 113
+  offset: 0, 0
+  index: -1
 dice1
   rotate: false
-  xy: 472, 580
+  xy: 1, 8
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
+dice1quan
+  rotate: true
+  xy: 818, 65
+  size: 138, 152
+  orig: 139, 154
+  offset: 0, 1
+  index: -1
 dice2
   rotate: false
-  xy: 472, 388
+  xy: 472, 621
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice3
   rotate: false
-  xy: 434, 196
+  xy: 193, 8
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice4
   rotate: false
-  xy: 664, 501
+  xy: 434, 314
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice5
   rotate: false
-  xy: 856, 501
+  xy: 434, 122
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice6
   rotate: false
-  xy: 664, 309
+  xy: 626, 314
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
+dicequan2
+  rotate: false
+  xy: 992, 382
+  size: 131, 158
+  orig: 132, 159
+  offset: 1, 1
+  index: -1
+dicequan3
+  rotate: false
+  xy: 972, 55
+  size: 136, 153
+  orig: 136, 155
+  offset: 0, 1
+  index: -1
+dicequan4
+  rotate: false
+  xy: 961, 210
+  size: 133, 156
+  orig: 133, 156
+  offset: 0, 0
+  index: -1
+dicequan5
+  rotate: false
+  xy: 818, 205
+  size: 141, 161
+  orig: 142, 163
+  offset: 0, 1
+  index: -1
 gaoguang
   rotate: true
-  xy: 1074, 1050
+  xy: 674, 506
   size: 34, 10
   orig: 34, 10
   offset: 0, 0
   index: -1
 multiple
   rotate: false
-  xy: 133, 62
+  xy: 517, 25
   size: 96, 95
   orig: 96, 95
   offset: 0, 0
   index: -1
 multiple0
   rotate: false
-  xy: 1, 38
+  xy: 385, 1
   size: 130, 119
   orig: 130, 119
   offset: 0, 0
   index: -1
 y1
   rotate: false
-  xy: 856, 309
+  xy: 626, 122
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 y2
   rotate: false
-  xy: 626, 117
+  xy: 674, 542
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 图层 14 拷贝
   rotate: false
-  xy: 1, 772
+  xy: 1, 813
   size: 750, 312
   orig: 750, 312
   offset: 0, 0
   index: -1
 图层 17
   rotate: true
-  xy: 753, 693
+  xy: 753, 734
   size: 391, 319
   orig: 391, 319
   offset: 0, 0
   index: -1
 图层 18
   rotate: false
-  xy: 1, 476
+  xy: 1, 517
   size: 469, 294
   orig: 469, 294
   offset: 0, 0
   index: -1
 图层 19
   rotate: false
-  xy: 1, 159
+  xy: 1, 200
   size: 431, 315
   orig: 433, 339
   offset: 2, 0
   index: -1
 圆角矩形 2
   rotate: false
-  xy: 818, 117
+  xy: 866, 542
   size: 190, 190
   orig: 190, 190
   offset: 0, 0

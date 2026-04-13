@@ -148,7 +148,7 @@
         #ability-bar-host {
             position: fixed;
             left: 50%;
-            bottom: 5px;
+            bottom: 28px;
             transform: translateX(-50%);
             transform-origin: bottom center;
             width: 294px;
@@ -218,7 +218,7 @@
             transform: translateY(-50%);
             z-index: 3;
             text-align: center;
-            font-size: 15px;
+            font-size: 20px;
             font-weight: 800;
             font-family: "Segoe UI", system-ui, sans-serif;
             color: #fffef5;
@@ -226,6 +226,23 @@
             text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 0 12px rgba(0, 0, 0, 0.75);
             pointer-events: none;
             line-height: 1.25;
+        }
+        #ability-recovery-hint {
+            position: absolute;
+            left: 50%;
+            top: calc(100% + 8px);
+            transform: translateX(-50%);
+            z-index: 3;
+            min-width: max-content;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            color: #f8eed0;
+            text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 0 8px rgba(0, 0, 0, 0.72);
+            line-height: 1.2;
+            pointer-events: none;
+            white-space: nowrap;
         }
         #heart-hp-host {
             position: fixed;
@@ -401,6 +418,7 @@
                     </div>
                     <img id="ability-bar-img2" class="ability-bar-img2" src="./image/Detailedarticle2.png" alt="" width="294" />
                     <div id="ability-dice-label" aria-live="polite">—</div>
+                    <div id="ability-recovery-hint" aria-live="polite">每小时恢复100点，体力已满</div>
                 </div>
             </div>
             
@@ -446,9 +464,11 @@ const MACHINE_BOUNDS_W = 750;
 const MACHINE_BOUNDS_H = 415;
 const MACHINE_ANIM_DOWN = "machine-down";
 const MACHINE_ANIM_UP = "machine-up";
+const MACHINE_ANIM_BOOM = "boom1";
 const MULTIPLE_SPINE_URL = "./amin/multiple/multiple.json";
 const DICESKILLS_SPINE_URL = "./amin/Diceskills/Diceskills.json";
 const MULTIPLE_TXT_BONE = "txt";
+const ENERGY_RECOVER_PER_HOUR = 100;
 
 const MULTIPLE_LABEL_IMAGE = {
     1: "./image/multiple1.png",
@@ -527,6 +547,7 @@ let enemyBloodCurrentWidth = 666;
 let enemyBloodLagWidth = 666;
 let enemyBloodAnimFrame = 0;
 let enemyBloodLagAnimFrame = 0;
+let machineBoomClearTimer = 0;
 
 const els = {
     pixiCont: document.getElementById("pixi-canvas-container"),
@@ -534,6 +555,7 @@ const els = {
     abilityBarHost: document.getElementById("ability-bar-host"),
     abilityBarNine: document.getElementById("ability-bar-nine"),
     abilityDiceLabel: document.getElementById("ability-dice-label"),
+    abilityRecoveryHint: document.getElementById("ability-recovery-hint"),
     heartHpHost: document.getElementById("heart-hp-host"),
     heartFillClip: document.getElementById("heart-fill-clip"),
     heartHpText: document.getElementById("heart-hp-text"),
@@ -572,6 +594,30 @@ function updateAbilityBarFromDice() {
     if (els.abilityDiceLabel) {
         els.abilityDiceLabel.textContent = max > 0 ? `${cur} / ${max}` : "—";
     }
+    updateAbilityRecoveryHint(cur, max);
+}
+
+function formatRecoveryCountdown(totalSeconds) {
+    const clamped = Math.max(0, Math.ceil(totalSeconds || 0));
+    const hours = Math.floor(clamped / 3600);
+    const minutes = Math.floor((clamped % 3600) / 60);
+    const seconds = clamped % 60;
+    if (hours > 0) {
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function updateAbilityRecoveryHint(cur, max) {
+    if (!els.abilityRecoveryHint) return;
+    if (max <= 0 || cur >= max) {
+        els.abilityRecoveryHint.textContent = `每小时恢复${ENERGY_RECOVER_PER_HOUR}点，体力已满`;
+        return;
+    }
+    const missing = Math.max(0, max - cur);
+    const secondsPerPoint = 3600 / ENERGY_RECOVER_PER_HOUR;
+    const recoverSeconds = missing * secondsPerPoint;
+    els.abilityRecoveryHint.textContent = `每小时恢复${ENERGY_RECOVER_PER_HOUR}点，回满时间：${formatRecoveryCountdown(recoverSeconds)}`;
 }
 
 function applyAbilityBarLayout() {
@@ -580,7 +626,7 @@ function applyAbilityBarLayout() {
     const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
     const u = Math.min(1, vw / SCREEN_DESIGN_W, vh / SCREEN_DESIGN_H);
     els.abilityBarHost.style.transform = `translateX(-50%) scale(${u})`;
-    els.abilityBarHost.style.bottom = "5px";
+    els.abilityBarHost.style.bottom = "28px";
 }
 
 function applyHeartLayout() {
@@ -1110,7 +1156,10 @@ async function playDamageFlyoutSequence(sumDice, preB, finalDmg, skillGo) {
     await nbDigitsAppearWithAction(sumDice);
     
     await delay(50); 
-    if (skillGo) await runDiceSkillSpineAtStage(skillGo);
+    if (skillGo) {
+        playMachineBoomOnce();
+        await runDiceSkillSpineAtStage(skillGo);
+    }
     
     if (preB !== sumDice) await lerpNbDigits(sumDice, preB, 520, 22);
     else setNbDigitsClamped(preB);
@@ -1146,6 +1195,25 @@ async function runDiceSkillSpineAtStage(goName) {
     }
     await delay(durationMs);
     diceSkillsSpine.visible = false;
+}
+
+function playMachineBoomOnce() {
+    if (!machineDownSpine || !machineDownSpine.skeleton) return;
+    const boomAnim = pickSpineAnimName(machineDownSpine.skeleton.data, [MACHINE_ANIM_BOOM]);
+    if (!boomAnim) return;
+    try {
+        if (machineBoomClearTimer) {
+            clearTimeout(machineBoomClearTimer);
+            machineBoomClearTimer = 0;
+        }
+        clearSpineTrack(machineDownSpine, 1);
+        machineDownSpine.state.setAnimation(1, boomAnim, false);
+        const durationMs = Math.ceil((getSpineAnimDurationSec(machineDownSpine.skeleton.data, boomAnim) || 0.4) * 1000) + 40;
+        machineBoomClearTimer = window.setTimeout(() => {
+            clearSpineTrack(machineDownSpine, 1);
+            machineBoomClearTimer = 0;
+        }, durationMs);
+    } catch (e) {}
 }
 
 function setEnemy1IdleLoop() {
