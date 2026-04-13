@@ -13,7 +13,7 @@ dice1
   index: -1
 dice1quan
   rotate: false
-  xy: 1, 24
+  xy: 144, 24
   size: 138, 152
   orig: 139, 154
   offset: 0, 1
@@ -55,24 +55,31 @@ dice6
   index: -1
 dicequan2
   rotate: true
-  xy: 141, 45
+  xy: 580, 3
   size: 131, 158
   orig: 132, 159
   offset: 1, 1
   index: -1
 dicequan3
   rotate: false
-  xy: 301, 23
+  xy: 284, 23
   size: 136, 153
   orig: 136, 155
   offset: 0, 1
   index: -1
 dicequan4
   rotate: true
-  xy: 439, 1
+  xy: 422, 1
   size: 133, 156
   orig: 133, 156
   offset: 0, 0
+  index: -1
+dicequan5
+  rotate: false
+  xy: 1, 15
+  size: 141, 161
+  orig: 142, 163
+  offset: 0, 1
   index: -1
 gaoguang
   rotate: true
@@ -83,14 +90,14 @@ gaoguang
   index: -1
 multiple
   rotate: false
-  xy: 729, 39
+  xy: 872, 39
   size: 96, 95
   orig: 96, 95
   offset: 0, 0
   index: -1
 multiple0
   rotate: false
-  xy: 597, 15
+  xy: 740, 15
   size: 130, 119
   orig: 130, 119
   offset: 0, 0

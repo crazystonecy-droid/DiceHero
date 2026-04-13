@@ -1,138 +1,152 @@
 
 dice3.png
-size: 1085, 1085
+size: 1104, 1104
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
 dice1
   rotate: false
-  xy: 472, 580
+  xy: 472, 599
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice1quan
   rotate: false
-  xy: 1, 5
+  xy: 144, 24
   size: 138, 152
   orig: 139, 154
   offset: 0, 1
   index: -1
 dice2
   rotate: false
-  xy: 472, 388
+  xy: 472, 407
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice3
   rotate: false
-  xy: 434, 196
+  xy: 434, 215
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice4
   rotate: false
-  xy: 664, 501
+  xy: 664, 520
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice5
   rotate: false
-  xy: 856, 501
+  xy: 856, 520
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dice6
   rotate: false
-  xy: 664, 309
+  xy: 664, 328
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 dicequan2
   rotate: true
-  xy: 141, 26
+  xy: 580, 3
   size: 131, 158
   orig: 132, 159
   offset: 1, 1
   index: -1
 dicequan3
   rotate: false
-  xy: 301, 4
+  xy: 284, 23
   size: 136, 153
   orig: 136, 155
   offset: 0, 1
   index: -1
+dicequan4
+  rotate: true
+  xy: 422, 1
+  size: 133, 156
+  orig: 133, 156
+  offset: 0, 0
+  index: -1
+dicequan5
+  rotate: false
+  xy: 1, 15
+  size: 141, 161
+  orig: 142, 163
+  offset: 0, 1
+  index: -1
 gaoguang
   rotate: true
-  xy: 1074, 1050
+  xy: 1074, 1069
   size: 34, 10
   orig: 34, 10
   offset: 0, 0
   index: -1
 multiple
   rotate: false
-  xy: 571, 20
+  xy: 872, 39
   size: 96, 95
   orig: 96, 95
   offset: 0, 0
   index: -1
 multiple0
   rotate: false
-  xy: 439, 75
+  xy: 740, 15
   size: 130, 119
   orig: 130, 119
   offset: 0, 0
   index: -1
 y1
   rotate: false
-  xy: 856, 309
+  xy: 856, 328
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 y2
   rotate: false
-  xy: 626, 117
+  xy: 626, 136
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
   index: -1
 图层 14 拷贝
   rotate: false
-  xy: 1, 772
+  xy: 1, 791
   size: 750, 312
   orig: 750, 312
   offset: 0, 0
   index: -1
 图层 17
   rotate: true
-  xy: 753, 693
+  xy: 753, 712
   size: 391, 319
   orig: 391, 319
   offset: 0, 0
   index: -1
 图层 18
   rotate: false
-  xy: 1, 476
+  xy: 1, 495
   size: 469, 294
   orig: 469, 294
   offset: 0, 0
   index: -1
 图层 19
   rotate: false
-  xy: 1, 159
+  xy: 1, 178
   size: 431, 315
   orig: 433, 339
   offset: 2, 0
   index: -1
 圆角矩形 2
   rotate: false
-  xy: 818, 117
+  xy: 818, 136
   size: 190, 190
   orig: 190, 190
   offset: 0, 0
