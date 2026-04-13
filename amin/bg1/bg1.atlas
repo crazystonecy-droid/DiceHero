@@ -1,0 +1,27 @@
+
+bg1.png
+size: 1644, 1644
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+bg1
+  rotate: false
+  xy: 1, 1
+  size: 750, 1642
+  orig: 750, 1642
+  offset: 0, 0
+  index: -1
+图层 3
+  rotate: false
+  xy: 753, 1435
+  size: 387, 208
+  orig: 387, 219
+  offset: 0, 0
+  index: -1
+图层 5
+  rotate: false
+  xy: 753, 1343
+  size: 65, 90
+  orig: 65, 90
+  offset: 0, 0
+  index: -1

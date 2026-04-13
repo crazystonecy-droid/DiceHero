@@ -1,0 +1,104 @@
+
+man.png
+size: 379, 379
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+b1
+  rotate: true
+  xy: 152, 4
+  size: 19, 45
+  orig: 19, 45
+  offset: 0, 0
+  index: -1
+b2
+  rotate: false
+  xy: 207, 43
+  size: 18, 48
+  orig: 18, 48
+  offset: 0, 0
+  index: -1
+b3
+  rotate: true
+  xy: 227, 74
+  size: 17, 42
+  orig: 17, 42
+  offset: 0, 0
+  index: -1
+b4
+  rotate: true
+  xy: 227, 57
+  size: 15, 37
+  orig: 15, 37
+  offset: 0, 0
+  index: -1
+b5
+  rotate: true
+  xy: 142, 84
+  size: 7, 8
+  orig: 7, 8
+  offset: 0, 0
+  index: -1
+man1
+  rotate: false
+  xy: 271, 36
+  size: 74, 109
+  orig: 74, 109
+  offset: 0, 0
+  index: -1
+man2
+  rotate: false
+  xy: 271, 252
+  size: 96, 126
+  orig: 96, 126
+  offset: 0, 0
+  index: -1
+man3
+  rotate: false
+  xy: 152, 25
+  size: 53, 66
+  orig: 53, 66
+  offset: 0, 0
+  index: -1
+man4
+  rotate: false
+  xy: 90, 5
+  size: 60, 68
+  orig: 60, 68
+  offset: 0, 0
+  index: -1
+man5
+  rotate: false
+  xy: 1, 75
+  size: 139, 152
+  orig: 139, 152
+  offset: 0, 0
+  index: -1
+man6
+  rotate: false
+  xy: 1, 1
+  size: 87, 72
+  orig: 88, 72
+  offset: 0, 0
+  index: -1
+man7
+  rotate: true
+  xy: 142, 93
+  size: 134, 127
+  orig: 134, 127
+  offset: 0, 0
+  index: -1
+weapon
+  rotate: false
+  xy: 271, 147
+  size: 84, 103
+  orig: 84, 103
+  offset: 0, 0
+  index: -1
+组 4
+  rotate: false
+  xy: 1, 229
+  size: 268, 149
+  orig: 268, 149
+  offset: 0, 0
+  index: -1

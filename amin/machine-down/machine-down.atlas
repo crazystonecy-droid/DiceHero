@@ -1,0 +1,118 @@
+
+machine-down.png
+size: 1085, 1085
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+dice1
+  rotate: false
+  xy: 472, 580
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+dice2
+  rotate: false
+  xy: 472, 388
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+dice3
+  rotate: false
+  xy: 434, 196
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+dice4
+  rotate: false
+  xy: 664, 501
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+dice5
+  rotate: false
+  xy: 856, 501
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+dice6
+  rotate: false
+  xy: 664, 309
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+gaoguang
+  rotate: true
+  xy: 1074, 1050
+  size: 34, 10
+  orig: 34, 10
+  offset: 0, 0
+  index: -1
+multiple
+  rotate: false
+  xy: 133, 62
+  size: 96, 95
+  orig: 96, 95
+  offset: 0, 0
+  index: -1
+multiple0
+  rotate: false
+  xy: 1, 38
+  size: 130, 119
+  orig: 130, 119
+  offset: 0, 0
+  index: -1
+y1
+  rotate: false
+  xy: 856, 309
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+y2
+  rotate: false
+  xy: 626, 117
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1
+图层 14 拷贝
+  rotate: false
+  xy: 1, 772
+  size: 750, 312
+  orig: 750, 312
+  offset: 0, 0
+  index: -1
+图层 17
+  rotate: true
+  xy: 753, 693
+  size: 391, 319
+  orig: 391, 319
+  offset: 0, 0
+  index: -1
+图层 18
+  rotate: false
+  xy: 1, 476
+  size: 469, 294
+  orig: 469, 294
+  offset: 0, 0
+  index: -1
+图层 19
+  rotate: false
+  xy: 1, 159
+  size: 431, 315
+  orig: 433, 339
+  offset: 2, 0
+  index: -1
+圆角矩形 2
+  rotate: false
+  xy: 818, 117
+  size: 190, 190
+  orig: 190, 190
+  offset: 0, 0
+  index: -1

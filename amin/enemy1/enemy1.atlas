@@ -1,0 +1,83 @@
+
+enemy1.png
+size: 922, 922
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+z1
+  rotate: false
+  xy: 1, 412
+  size: 422, 509
+  orig: 434, 509
+  offset: 0, 0
+  index: -1
+z2
+  rotate: true
+  xy: 425, 284
+  size: 180, 360
+  orig: 180, 360
+  offset: 0, 0
+  index: -1
+z3
+  rotate: false
+  xy: 363, 111
+  size: 49, 47
+  orig: 49, 47
+  offset: 0, 0
+  index: -1
+z4
+  rotate: true
+  xy: 682, 52
+  size: 63, 134
+  orig: 63, 134
+  offset: 0, 0
+  index: -1
+z5
+  rotate: true
+  xy: 787, 325
+  size: 139, 132
+  orig: 139, 132
+  offset: 0, 0
+  index: -1
+z6
+  rotate: true
+  xy: 414, 24
+  size: 258, 266
+  orig: 258, 267
+  offset: 0, 1
+  index: -1
+z7
+  rotate: false
+  xy: 204, 1
+  size: 157, 157
+  orig: 157, 157
+  offset: 0, 0
+  index: -1
+z8
+  rotate: true
+  xy: 1, 22
+  size: 136, 201
+  orig: 136, 201
+  offset: 0, 0
+  index: -1
+z9
+  rotate: true
+  xy: 682, 117
+  size: 165, 163
+  orig: 165, 163
+  offset: 0, 0
+  index: -1
+组 7
+  rotate: false
+  xy: 425, 466
+  size: 467, 455
+  orig: 467, 455
+  offset: 0, 0
+  index: -1
+组 8
+  rotate: true
+  xy: 1, 160
+  size: 250, 411
+  orig: 250, 411
+  offset: 0, 0
+  index: -1
