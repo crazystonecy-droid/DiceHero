@@ -141,6 +141,35 @@
             contain: none;
             clip-path: none;
         }
+        #end-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 12000;
+            transition: opacity 180ms ease, visibility 180ms ease, background-color 180ms ease;
+        }
+        #end-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        #end-overlay-pixi {
+            position: absolute;
+            inset: 0;
+            overflow: visible;
+        }
+        #end-overlay-pixi canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            position: absolute;
+            inset: 0;
+            overflow: visible !important;
+        }
 
         #error-msg { position: absolute; top: 10px; left: 0; width: 100%; text-align: center; color: #ff4d4f; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; z-index: 999; }
 
@@ -443,6 +472,9 @@
     </div>
 </div>
 <div id="effects-pixi-host" aria-hidden="true"></div>
+<div id="end-overlay" aria-hidden="true">
+    <div id="end-overlay-pixi"></div>
+</div>
 
 <script>
 // ==========================================
@@ -451,16 +483,22 @@
 const MACHINE_DOWN_SPINE_URL = "./amin/machine-down/machine-down.json";
 const MACHINE_UP_SPINE_URL = "./amin/machine-up/machine-up.json";
 const BG1_SPINE_URL = "./amin/bg1/bg1.json";
+const SHENGLI_SPINE_URL = "./amin/shengli/shengli.json";
+const SHIBAI_SPINE_URL = "./amin/shibai/shibai.json";
 const ENEMY_CONFIGS = {
     enemy1: {
         spineUrl: "./amin/enemy1/enemy1.json",
         nmSpineUrl: "./amin/enemy1-nm/enemy1-nm.json",
-        displayName: "猪角兽"
+        displayName: "猪角兽",
+        baseHp: 6000,
+        attackDamage: 4
     },
     enemy2: {
         spineUrl: "./amin/enemy2/enemy2.json",
         nmSpineUrl: null,
-        displayName: "enemy2"
+        displayName: "enemy2",
+        baseHp: 12000,
+        attackDamage: 8
     }
 };
 const ENEMY_WAVE_KEYS = ["enemy1", "enemy2"];
@@ -476,10 +514,14 @@ const MACHINE_BOUNDS_H = 415;
 const MACHINE_ANIM_DOWN = "machine-down";
 const MACHINE_ANIM_UP = "machine-up";
 const MACHINE_ANIM_BOOM = "boom1";
+const END_OVERLAY_ANIM_ENTER = "enter";
+const END_OVERLAY_ANIM_WAIT = "wait";
+const DEBUG_SHOW_SHENGLI_AT_DICE = false;
 const MULTIPLE_SPINE_URL = "./amin/multiple/multiple.json";
 const DICESKILLS_SPINE_URL = "./amin/Diceskills/Diceskills.json";
 const MULTIPLE_TXT_BONE = "txt";
-const ENERGY_RECOVER_PER_HOUR = 100;
+const ENERGY_RECOVER_PER_MINUTE = 20;
+const ENERGY_RECOVER_INTERVAL_MS = Math.floor(60000 / ENERGY_RECOVER_PER_MINUTE);
 
 const MULTIPLE_LABEL_IMAGE = {
     1: "./image/multiple1.png",
@@ -496,6 +538,7 @@ const NB_DIGIT_IMAGE_BASE = "./image/";
 const NB_ANIM_ACTION = "action";
 const NB_ANIM_WAIT = "wait";
 const NB_ANIM_END = "end";
+const NB_EFFECT_OFFSET_Y = -438;
 const MULT_LING_ANIM_ENTER = "enter";
 const ENABLE_MULT_LING = true;
 const NB_MAX_DIGITS = 5;
@@ -567,10 +610,21 @@ let currentWaveIndex = 0;
 let currentEnemyKey = ENEMY_WAVE_KEYS[0];
 let currentEnemyConfig = ENEMY_CONFIGS[currentEnemyKey] || ENEMY_CONFIGS.enemy1;
 let loadedMainResources = null;
+let energyRecoveryTimer = 0;
+let energyRecoveryLastAt = 0;
+let endOverlayApp = null;
+let shengliSpine = null;
+let shibaiSpine = null;
+let activeEndSpine = null;
+let isEndOverlayVisible = false;
+let isEndOverlayClosing = false;
+let pendingWaveAdvance = false;
 
 const els = {
     pixiCont: document.getElementById("pixi-canvas-container"),
     effectsPixiHost: document.getElementById("effects-pixi-host"),
+    endOverlay: document.getElementById("end-overlay"),
+    endOverlayPixi: document.getElementById("end-overlay-pixi"),
     abilityBarHost: document.getElementById("ability-bar-host"),
     abilityBarNine: document.getElementById("ability-bar-nine"),
     abilityDiceLabel: document.getElementById("ability-dice-label"),
@@ -617,6 +671,29 @@ function updateAbilityBarFromDice() {
     updateAbilityRecoveryHint(cur, max);
 }
 
+function tickEnergyRecovery() {
+    const max = GAME_DATA.initialRolls | 0;
+    if (max <= 0 || typeof totalRolls !== "number") return;
+    const now = Date.now();
+    if (!energyRecoveryLastAt) energyRecoveryLastAt = now;
+    if (totalRolls >= max) {
+        energyRecoveryLastAt = now;
+        return;
+    }
+    const elapsed = now - energyRecoveryLastAt;
+    const gain = Math.floor(elapsed / ENERGY_RECOVER_INTERVAL_MS);
+    if (gain <= 0) return;
+    totalRolls = Math.min(max, totalRolls + gain);
+    energyRecoveryLastAt += gain * ENERGY_RECOVER_INTERVAL_MS;
+    updateUI();
+}
+
+function startEnergyRecoveryLoop() {
+    if (energyRecoveryTimer) clearInterval(energyRecoveryTimer);
+    energyRecoveryLastAt = Date.now();
+    energyRecoveryTimer = window.setInterval(tickEnergyRecovery, 250);
+}
+
 function formatRecoveryCountdown(totalSeconds) {
     const clamped = Math.max(0, Math.ceil(totalSeconds || 0));
     const hours = Math.floor(clamped / 3600);
@@ -631,13 +708,13 @@ function formatRecoveryCountdown(totalSeconds) {
 function updateAbilityRecoveryHint(cur, max) {
     if (!els.abilityRecoveryHint) return;
     if (max <= 0 || cur >= max) {
-        els.abilityRecoveryHint.textContent = `每小时恢复${ENERGY_RECOVER_PER_HOUR}点，体力已满`;
+        els.abilityRecoveryHint.textContent = `1分钟恢复${ENERGY_RECOVER_PER_MINUTE}点，体力已满`;
         return;
     }
     const missing = Math.max(0, max - cur);
-    const secondsPerPoint = 3600 / ENERGY_RECOVER_PER_HOUR;
+    const secondsPerPoint = 60 / ENERGY_RECOVER_PER_MINUTE;
     const recoverSeconds = missing * secondsPerPoint;
-    els.abilityRecoveryHint.textContent = `每小时恢复${ENERGY_RECOVER_PER_HOUR}点，回满时间：${formatRecoveryCountdown(recoverSeconds)}`;
+    els.abilityRecoveryHint.textContent = `1分钟恢复${ENERGY_RECOVER_PER_MINUTE}点，回满时间：${formatRecoveryCountdown(recoverSeconds)}`;
 }
 
 function syncCurrentEnemyConfig() {
@@ -648,6 +725,14 @@ function syncCurrentEnemyConfig() {
 
 function updateEnemyNameUI() {
     if (els.enemyName) els.enemyName.textContent = currentEnemyConfig.displayName || "敌人";
+}
+
+function getCurrentEnemyBaseHp() {
+    return Math.max(1, currentEnemyConfig?.baseHp || GAME_DATA.enemy.baseHp);
+}
+
+function getCurrentEnemyAttackDamage() {
+    return Math.max(0, currentEnemyConfig?.attackDamage ?? GAME_DATA.enemy.attackDamage);
 }
 
 function resetEnemyBloodVisualState() {
@@ -668,6 +753,110 @@ function resetEnemyBloodVisualState() {
     }
     if (els.enemyBloodFill) els.enemyBloodFill.style.width = "666px";
     if (els.enemyBloodLagFill) els.enemyBloodLagFill.style.width = "666px";
+}
+
+function hideAllEndResultSpines() {
+    [shengliSpine, shibaiSpine].forEach(spine => {
+        if (!spine) return;
+        spine.visible = false;
+        spine.alpha = 1;
+    });
+    activeEndSpine = null;
+}
+
+function layoutEndResultSpine(spine) {
+    if (!spine || !effectsApp) return;
+    if (diceSkillsSpine) placeDiceSkillsAtStageCenter();
+    const baseX = diceSkillsSpine ? diceSkillsSpine.x : Math.max(1, effectsApp.renderer.width) * 0.5;
+    const baseY = diceSkillsSpine ? diceSkillsSpine.y : Math.max(1, effectsApp.renderer.height) * 0.5;
+    const yOffset = spine === shengliSpine ? -800 : 0;
+    spine.scale.set(1);
+    spine.position.set(baseX, baseY + yOffset);
+    spine.rotation = 0;
+    spine.pivot.set(0, 0);
+    if (diceSkillsSpine) spine.scale.copyFrom(diceSkillsSpine.scale);
+    try { spine.update(0); } catch (e) {}
+    spine.__baseScale = spine.scale.x || 1;
+    try { spine.update(0); } catch (e) {}
+}
+
+function applyEndOverlayLayout() {
+    if (!effectsApp) return;
+    if (shengliSpine) layoutEndResultSpine(shengliSpine);
+    if (shibaiSpine) layoutEndResultSpine(shibaiSpine);
+}
+
+function debugShowShengliAtDiceAnchor() {
+    if (!DEBUG_SHOW_SHENGLI_AT_DICE || !shengliSpine || !diceSkillsSpine) return;
+    placeDiceSkillsAtStageCenter();
+    shengliSpine.visible = true;
+    shengliSpine.alpha = 1;
+    shengliSpine.x = diceSkillsSpine.x;
+    shengliSpine.y = diceSkillsSpine.y;
+    shengliSpine.scale.copyFrom(diceSkillsSpine.scale);
+    shengliSpine.rotation = 0;
+    shengliSpine.pivot.set(0, 0);
+    try {
+        clearSpineTrack(shengliSpine, 0);
+        shengliSpine.state.setAnimation(0, END_OVERLAY_ANIM_WAIT, true);
+        shengliSpine.update(0);
+    } catch (e) {}
+}
+
+async function hideEndOverlay() {
+    if (!isEndOverlayVisible || isEndOverlayClosing || !els.endOverlay) return;
+    isEndOverlayClosing = true;
+    const spine = activeEndSpine;
+    const overlayEl = els.endOverlay;
+    const start = performance.now();
+    const baseScale = spine && typeof spine.__baseScale === "number" ? spine.__baseScale : 1;
+    await new Promise(resolve => {
+        const tick = now => {
+            const t = Math.min(1, (now - start) / 180);
+            const eased = 1 - Math.pow(1 - t, 3);
+            overlayEl.style.opacity = String(1 - eased);
+            if (spine) spine.scale.set(baseScale * (1 - eased));
+            if (t < 1) requestAnimationFrame(tick);
+            else resolve();
+        };
+        requestAnimationFrame(tick);
+    });
+    hideAllEndResultSpines();
+    overlayEl.classList.remove("is-visible");
+    overlayEl.style.opacity = "";
+    if (els.effectsPixiHost) els.effectsPixiHost.style.zIndex = "5000";
+    isEndOverlayVisible = false;
+    isEndOverlayClosing = false;
+    updateUI();
+    if (pendingWaveAdvance) {
+        pendingWaveAdvance = false;
+        await advanceToNextWave();
+    }
+}
+
+function showEndOverlay(type) {
+    if (!els.endOverlay || !effectsApp) return;
+    hideAllEndResultSpines();
+    const spine = type === "win" ? shengliSpine : shibaiSpine;
+    if (!spine) return;
+    if (spine.parent !== effectsApp.stage) effectsApp.stage.addChild(spine);
+    else effectsApp.stage.addChild(spine);
+    activeEndSpine = spine;
+    spine.visible = true;
+    try {
+        clearSpineTrack(spine, 0);
+        spine.state.setAnimation(0, END_OVERLAY_ANIM_ENTER, false);
+        spine.state.addAnimation(0, END_OVERLAY_ANIM_WAIT, true, 0);
+    } catch (e) {}
+    try { spine.update(0); } catch (e) {}
+    layoutEndResultSpine(spine);
+    isEndOverlayVisible = true;
+    isEndOverlayClosing = false;
+    els.endOverlay.classList.add("is-visible");
+    els.endOverlay.style.opacity = "1";
+    if (els.effectsPixiHost) els.effectsPixiHost.style.zIndex = "13000";
+    try { effectsApp.renderer.render(effectsApp.stage); } catch (e) {}
+    updateUI();
 }
 
 function destroyCurrentEnemySpines() {
@@ -717,7 +906,7 @@ async function advanceToNextWave() {
     await delay(650);
     currentWaveIndex += 1;
     syncCurrentEnemyConfig();
-    enemyMaxHp = enemyHp = GAME_DATA.enemy.baseHp;
+    enemyMaxHp = enemyHp = getCurrentEnemyBaseHp();
     hasPlayedEnemyIntro = false;
     resetEnemyBloodVisualState();
     buildCurrentEnemySpines();
@@ -1555,7 +1744,7 @@ function syncMultLabelToTxtBone() {
 
 // === 修改：真实的按下、抬起交互 ===
 function onMultiplePointerDown() {
-    if (!multipleSpine || isDiceRolling || enemyHp <= 0 || playerHp <= 0) return;
+    if (!multipleSpine || isDiceRolling || isEndOverlayVisible || enemyHp <= 0 || playerHp <= 0) return;
     isMultiplePressed = true;
     const sk = multipleSpine.skeleton.data;
     const down = pickSpineAnimName(sk, [MULT_ANIM_DOWN, "down", "enter"]);
@@ -1593,7 +1782,7 @@ function restoreMultipleAfterPress(shouldToggleBonus) {
 }
 
 function onMultiplePointerTap() {
-    if (!isMultiplePressed || !multipleSpine || isDiceRolling || enemyHp <= 0 || playerHp <= 0) return;
+    if (!isMultiplePressed || !multipleSpine || isDiceRolling || isEndOverlayVisible || enemyHp <= 0 || playerHp <= 0) return;
     isMultiplePressed = false;
     restoreMultipleAfterPress(true);
 }
@@ -1615,6 +1804,7 @@ function wireMultipleTapOnce() {
             el.buttonMode = true;
             // 按下播放 down，真正点击时才切换倍率；拖出或取消只恢复状态
             el.off("pointerdown").on("pointerdown", onMultiplePointerDown);
+            el.off("pointerup").on("pointerup", onMultiplePointerTap);
             el.off("pointertap").on("pointertap", onMultiplePointerTap);
             el.off("pointerupoutside").on("pointerupoutside", onMultiplePointerCancel);
             el.off("pointercancel").on("pointercancel", onMultiplePointerCancel);
@@ -1645,7 +1835,7 @@ function syncMultipleToMachineUpAnchor() {
 }
 
 function onMachinePointerTap() {
-    if (!isAnimating && totalRolls >= bonusMult && allDiceSpineReady()) executeTurn();
+    if (!isAnimating && !isEndOverlayVisible && totalRolls >= bonusMult && allDiceSpineReady()) executeTurn();
 }
 
 function wireMachineTapTargetsOnce() {
@@ -1655,7 +1845,7 @@ function wireMachineTapTargetsOnce() {
 }
 
 function updateMachineInteractable() {
-    const can = !isAnimating && totalRolls >= bonusMult && allDiceSpineReady() && enemyHp > 0 && playerHp > 0;
+    const can = !isAnimating && !isEndOverlayVisible && totalRolls >= bonusMult && allDiceSpineReady() && enemyHp > 0 && playerHp > 0;
     [machineDownSpine, machineUpSpine].forEach(m => {
         if (m) { m.interactive = m.buttonMode = can; m.cursor = can ? "pointer" : "not-allowed"; m.alpha = 1; }
     });
@@ -1664,7 +1854,7 @@ function updateMachineInteractable() {
 
 function updateMultipleInteractable() {
     if (!multipleSpine) return;
-    const can = !isDiceRolling && enemyHp > 0 && playerHp > 0;
+    const can = !isDiceRolling && !isEndOverlayVisible && totalRolls > 0 && enemyHp > 0 && playerHp > 0;
     const a = can ? 1 : 0.45;
     [multipleSpine, multLabelSprite, multLabelText].forEach(el => {
         if (el) { el.interactive = el.buttonMode = can; el.cursor = can ? "pointer" : "not-allowed"; el.alpha = a; }
@@ -1719,6 +1909,7 @@ function initNbDamageLayers(resources) {
         nbEffectSpine.visible = false;
         nbEffectSpine.sortableChildren = false;
         nbEffectSpine.mask = null;
+        nbEffectSpine.y = NB_EFFECT_OFFSET_Y;
         hideNbEffectDigitSlot();
         nbFightLayer.addChild(nbEffectSpine);
     } else {
@@ -1746,6 +1937,26 @@ function initNbDamageLayers(resources) {
         multipleLingSpine.mask = null;
         effectsApp.stage.addChild(multipleLingSpine);
     } else multipleLingSpine = null;
+}
+
+function initEndOverlayLayer(resources) {
+    if ((shengliSpine || shibaiSpine) || !effectsApp) return;
+    if (resources.shengliSpine?.spineData) {
+        shengliSpine = new PIXI.spine.Spine(resources.shengliSpine.spineData);
+        shengliSpine.visible = false;
+        effectsApp.stage.addChild(shengliSpine);
+    }
+    if (resources.shibaiSpine?.spineData) {
+        shibaiSpine = new PIXI.spine.Spine(resources.shibaiSpine.spineData);
+        shibaiSpine.visible = false;
+        effectsApp.stage.addChild(shibaiSpine);
+    }
+    applyEndOverlayLayout();
+    if (els.endOverlay) {
+        els.endOverlay.addEventListener("pointerdown", () => {
+            if (isEndOverlayVisible) hideEndOverlay();
+        });
+    }
 }
 
 function initPixiAndSpine() {
@@ -1793,7 +2004,7 @@ function initPixiAndSpine() {
     for (let d = 0; d <= 9; d++) loader.add("nbDigitTex_" + d, `${NB_DIGIT_IMAGE_BASE}${d}.png`);
     DICE_SPINE_SOURCES.forEach((url, i) => loader.add("diceSpine_" + i, url));
     for (let fv = 1; fv <= 6; fv++) loader.add("diceFaceTex_" + fv, `${DICE_FACE_IMAGE_BASE}${fv}.png`);
-    loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL);
+    loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL).add("shengliSpine", SHENGLI_SPINE_URL).add("shibaiSpine", SHIBAI_SPINE_URL);
     
     loader.load((loader, resources) => {
         const rBg1 = resources.bg1Spine, rMan = resources.manSpine, rDown = resources.machineDownSpine, rUp = resources.machineUpSpine;
@@ -1877,6 +2088,7 @@ function initPixiAndSpine() {
         } else { multipleSpine = null; }
 
         initNbDamageLayers(resources);
+        initEndOverlayLayer(resources);
         setMachineIdleLoops();
         machineDownSpine.update(0); machineUpSpine.update(0);
         layoutMachineToScreenBottom();
@@ -1892,8 +2104,8 @@ function initPixiAndSpine() {
         });
         
         if (typeof ResizeObserver !== "undefined") new ResizeObserver(() => applyPixiLayout()).observe(els.pixiCont);
-        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); });
-        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); }));
+        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); });
+        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); }));
 
         app.ticker.add(() => {
             if (!machineDownSpine || !machineUpSpine) return;
@@ -1938,11 +2150,15 @@ function initPixiAndSpine() {
         });
 
         effectsApp.ticker.add(() => {
+            const dt = effectsApp.ticker.deltaMS / 1000;
             if (diceSkillsSpine?.visible) {
-                const dt = effectsApp.ticker.deltaMS / 1000;
                 try { if (diceSkillsSpine.state) diceSkillsSpine.state.timeScale = 1; } catch (e) {}
                 placeDiceSkillsAtStageCenter();
                 diceSkillsSpine.update(dt);
+            }
+            if (activeEndSpine?.visible) {
+                try { if (activeEndSpine.state) activeEndSpine.state.timeScale = 1; } catch (e) {}
+                activeEndSpine.update(dt);
             }
         });
 
@@ -1968,7 +2184,6 @@ function initPixiAndSpine() {
             placeDiceSkillsAtStageCenter();
             effectsApp.stage.addChild(diceSkillsSpine);
         }
-
         createDiceEntities();
         updateUI();
         requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); });
@@ -2176,10 +2391,13 @@ function renderDicePosition(d) {
 // ==========================================
 function init() {
     currentWaveIndex = 0;
+    pendingWaveAdvance = false;
     syncCurrentEnemyConfig();
     totalRolls = GAME_DATA.initialRolls; bonusMult = 1;
-    enemyMaxHp = enemyHp = GAME_DATA.enemy.baseHp; playerHp = GAME_DATA.playerMaxHp;
+    enemyMaxHp = enemyHp = getCurrentEnemyBaseHp(); playerHp = GAME_DATA.playerMaxHp;
     hasPlayedEnemyIntro = false;
+    energyRecoveryLastAt = Date.now();
+    startEnergyRecoveryLoop();
     resetEnemyBloodVisualState();
     updateAbilityBarFromDice(); initPixiAndSpine();
 }
@@ -2326,7 +2544,7 @@ async function executeTurn() {
         const enemyAttackPromise = playEnemy1AttackThenIdle();
         playManHitThenIdle();
         await enemyAttackPromise;
-        playerHp = Math.max(0, playerHp - GAME_DATA.enemy.attackDamage);
+        playerHp = Math.max(0, playerHp - getCurrentEnemyAttackDamage());
         updateUI();
         playerEl.classList.add("power-up");
         await delay(220);
@@ -2334,20 +2552,15 @@ async function executeTurn() {
     }
 
     if (enemyHp <= 0) {
-        const hasNextWave = await advanceToNextWave();
-        if (!hasNextWave) {
-            isAnimating = false;
-            updateUI();
-            setTimeout(() => alert("🎉 所有关卡敌人已被击败！"), 200);
-        }
+        pendingWaveAdvance = currentWaveIndex < ENEMY_WAVE_KEYS.length - 1;
+        isAnimating = false;
+        updateUI();
+        showEndOverlay("win");
     } else if (playerHp <= 0) {
+        pendingWaveAdvance = false;
         isAnimating = false;
         updateUI();
-        setTimeout(() => alert("❌ 勇者被击败了..."), 200);
-    } else if (totalRolls <= 0) {
-        isAnimating = false;
-        updateUI();
-        setTimeout(() => alert("❌ 投掷次数耗尽，勇者被击败了..."), 200);
+        showEndOverlay("lose");
     } else {
         isAnimating = false;
         updateUI();
