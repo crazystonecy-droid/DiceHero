@@ -1,0 +1,139 @@
+
+enemy2.png
+size: 968, 968
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+yanwu1
+  rotate: true
+  xy: 883, 807
+  size: 160, 83
+  orig: 191, 100
+  offset: 12, 9
+  index: -1
+yanwu2
+  rotate: false
+  xy: 796, 185
+  size: 170, 88
+  orig: 191, 100
+  offset: 9, 8
+  index: -1
+yanwu3
+  rotate: false
+  xy: 425, 620
+  size: 180, 95
+  orig: 191, 100
+  offset: 4, 3
+  index: -1
+yanwu4
+  rotate: false
+  xy: 608, 5
+  size: 186, 78
+  orig: 191, 100
+  offset: 0, 4
+  index: -1
+yanwu5
+  rotate: true
+  xy: 883, 620
+  size: 185, 81
+  orig: 191, 100
+  offset: 2, 1
+  index: -1
+yanwu6
+  rotate: true
+  xy: 669, 86
+  size: 187, 71
+  orig: 191, 100
+  offset: 4, 11
+  index: -1
+yanwu7
+  rotate: true
+  xy: 608, 85
+  size: 188, 59
+  orig: 191, 100
+  offset: 3, 21
+  index: -1
+yanwu8
+  rotate: false
+  xy: 425, 908
+  size: 38, 59
+  orig: 191, 100
+  offset: 149, 20
+  index: -1
+z1
+  rotate: false
+  xy: 1, 458
+  size: 422, 509
+  orig: 434, 509
+  offset: 0, 0
+  index: -1
+z2
+  rotate: true
+  xy: 606, 275
+  size: 180, 360
+  orig: 180, 360
+  offset: 0, 0
+  index: -1
+z3
+  rotate: false
+  xy: 875, 571
+  size: 49, 47
+  orig: 49, 47
+  offset: 0, 0
+  index: -1
+z4
+  rotate: true
+  xy: 470, 396
+  size: 63, 134
+  orig: 63, 134
+  offset: 0, 0
+  index: -1
+z5
+  rotate: true
+  xy: 470, 255
+  size: 139, 132
+  orig: 139, 132
+  offset: 0, 0
+  index: -1
+z6
+  rotate: true
+  xy: 607, 457
+  size: 258, 266
+  orig: 258, 267
+  offset: 0, 1
+  index: -1
+z7
+  rotate: false
+  xy: 425, 461
+  size: 157, 157
+  orig: 157, 157
+  offset: 0, 0
+  index: -1
+z8
+  rotate: false
+  xy: 470, 52
+  size: 136, 201
+  orig: 136, 201
+  offset: 0, 0
+  index: -1
+z9
+  rotate: false
+  xy: 796, 20
+  size: 165, 163
+  orig: 165, 163
+  offset: 0, 0
+  index: -1
+组 7
+  rotate: false
+  xy: 1, 1
+  size: 467, 455
+  orig: 467, 455
+  offset: 0, 0
+  index: -1
+组 8
+  rotate: true
+  xy: 470, 717
+  size: 250, 411
+  orig: 250, 411
+  offset: 0, 0
+  index: -1

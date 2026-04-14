@@ -451,8 +451,19 @@
 const MACHINE_DOWN_SPINE_URL = "./amin/machine-down/machine-down.json";
 const MACHINE_UP_SPINE_URL = "./amin/machine-up/machine-up.json";
 const BG1_SPINE_URL = "./amin/bg1/bg1.json";
-const ENEMY1_SPINE_URL = "./amin/enemy1/enemy1.json";
-const ENEMY1_NM_SPINE_URL = "./amin/enemy1-nm/enemy1-nm.json";
+const ENEMY_CONFIGS = {
+    enemy1: {
+        spineUrl: "./amin/enemy1/enemy1.json",
+        nmSpineUrl: "./amin/enemy1-nm/enemy1-nm.json",
+        displayName: "猪角兽"
+    },
+    enemy2: {
+        spineUrl: "./amin/enemy2/enemy2.json",
+        nmSpineUrl: null,
+        displayName: "enemy2"
+    }
+};
+const ENEMY_WAVE_KEYS = ["enemy1", "enemy2"];
 const MAN_SPINE_URL = "./amin/man/man.json";
 const MACHINE_SLOT_BONE = "slot";
 const PIXI_DESIGN_W = 750;
@@ -496,6 +507,10 @@ const DICE_SHADOW_ALPHA = 0.34;
 const DICE_SHADOW_SIZE_MULT = 1.2;
 const ENEMY1_OFFSET_Y = 87;
 const MAN_OFFSET_FROM_ENEMY_Y = -25;
+const ENEMY_ROOT_ANCHOR_X = 375;
+const ENEMY_ROOT_ANCHOR_Y = SCREEN_DESIGN_H - 480;
+const MAN_ROOT_ANCHOR_X = 325;
+const MAN_ROOT_ANCHOR_Y = SCREEN_DESIGN_H - 375;
 
 const DICE_SPINE_SOURCES = [
     "./amin/dice1/dice1.json",
@@ -548,6 +563,10 @@ let enemyBloodLagWidth = 666;
 let enemyBloodAnimFrame = 0;
 let enemyBloodLagAnimFrame = 0;
 let machineBoomClearTimer = 0;
+let currentWaveIndex = 0;
+let currentEnemyKey = ENEMY_WAVE_KEYS[0];
+let currentEnemyConfig = ENEMY_CONFIGS[currentEnemyKey] || ENEMY_CONFIGS.enemy1;
+let loadedMainResources = null;
 
 const els = {
     pixiCont: document.getElementById("pixi-canvas-container"),
@@ -559,6 +578,7 @@ const els = {
     heartHpHost: document.getElementById("heart-hp-host"),
     heartFillClip: document.getElementById("heart-fill-clip"),
     heartHpText: document.getElementById("heart-hp-text"),
+    enemyName: document.getElementById("enemy-blood-name"),
     enemyBloodHost: document.getElementById("enemy-blood-host"),
     enemyBloodLagFill: document.getElementById("enemy-blood-fill-lag"),
     enemyBloodFill: document.getElementById("enemy-blood-fill")
@@ -618,6 +638,94 @@ function updateAbilityRecoveryHint(cur, max) {
     const secondsPerPoint = 3600 / ENERGY_RECOVER_PER_HOUR;
     const recoverSeconds = missing * secondsPerPoint;
     els.abilityRecoveryHint.textContent = `每小时恢复${ENERGY_RECOVER_PER_HOUR}点，回满时间：${formatRecoveryCountdown(recoverSeconds)}`;
+}
+
+function syncCurrentEnemyConfig() {
+    currentEnemyKey = ENEMY_WAVE_KEYS[currentWaveIndex] || ENEMY_WAVE_KEYS[0] || "enemy1";
+    currentEnemyConfig = ENEMY_CONFIGS[currentEnemyKey] || ENEMY_CONFIGS.enemy1;
+    updateEnemyNameUI();
+}
+
+function updateEnemyNameUI() {
+    if (els.enemyName) els.enemyName.textContent = currentEnemyConfig.displayName || "敌人";
+}
+
+function resetEnemyBloodVisualState() {
+    lastEnemyBloodWidth = 666;
+    enemyBloodCurrentWidth = 666;
+    enemyBloodLagWidth = 666;
+    if (enemyBloodAnimFrame) {
+        cancelAnimationFrame(enemyBloodAnimFrame);
+        enemyBloodAnimFrame = 0;
+    }
+    if (enemyBloodLagAnimFrame) {
+        cancelAnimationFrame(enemyBloodLagAnimFrame);
+        enemyBloodLagAnimFrame = 0;
+    }
+    if (enemyBloodLagTimer) {
+        clearTimeout(enemyBloodLagTimer);
+        enemyBloodLagTimer = null;
+    }
+    if (els.enemyBloodFill) els.enemyBloodFill.style.width = "666px";
+    if (els.enemyBloodLagFill) els.enemyBloodLagFill.style.width = "666px";
+}
+
+function destroyCurrentEnemySpines() {
+    [enemy1NmSpine, enemy1Spine].forEach(spine => {
+        if (!spine) return;
+        if (spine.parent) spine.parent.removeChild(spine);
+        try { spine.destroy({ children: true }); } catch (e) {}
+    });
+    enemy1NmSpine = null;
+    enemy1Spine = null;
+}
+
+function addEnemySpinesToStage() {
+    if (!app) return;
+    const beforeIndex = manSpine && manSpine.parent === app.stage ? app.stage.getChildIndex(manSpine) : app.stage.children.length;
+    if (enemy1NmSpine) app.stage.addChildAt(enemy1NmSpine, Math.min(beforeIndex, app.stage.children.length));
+    const enemyIndex = manSpine && manSpine.parent === app.stage ? app.stage.getChildIndex(manSpine) : app.stage.children.length;
+    if (enemy1Spine) app.stage.addChildAt(enemy1Spine, Math.min(enemyIndex, app.stage.children.length));
+}
+
+function buildCurrentEnemySpines() {
+    if (!loadedMainResources) return;
+    const enemyRes = loadedMainResources["enemySpine_" + currentEnemyKey];
+    const enemyNmRes = loadedMainResources["enemyNmSpine_" + currentEnemyKey];
+    destroyCurrentEnemySpines();
+    if (enemyNmRes?.spineData) {
+        enemy1NmSpine = new PIXI.spine.Spine(enemyNmRes.spineData);
+        enemy1NmSpine.sortableChildren = false;
+        enemy1NmSpine.visible = true;
+        enemy1NmSpine.alpha = 1;
+        layoutEnemy1NmSpineAtScreenCenter();
+    }
+    if (enemyRes?.spineData) {
+        enemy1Spine = new PIXI.spine.Spine(enemyRes.spineData);
+        enemy1Spine.sortableChildren = false;
+        enemy1Spine.visible = true;
+        enemy1Spine.alpha = 1;
+        layoutEnemy1SpineAtScreenCenter();
+    }
+    if (manSpine) addEnemySpinesToStage();
+}
+
+async function advanceToNextWave() {
+    if (currentWaveIndex >= ENEMY_WAVE_KEYS.length - 1 || !app || !loadedMainResources) return false;
+    isAnimating = true;
+    updateUI();
+    await delay(650);
+    currentWaveIndex += 1;
+    syncCurrentEnemyConfig();
+    enemyMaxHp = enemyHp = GAME_DATA.enemy.baseHp;
+    hasPlayedEnemyIntro = false;
+    resetEnemyBloodVisualState();
+    buildCurrentEnemySpines();
+    updateUI();
+    await playEnemyIntroOnce();
+    isAnimating = false;
+    updateUI();
+    return true;
 }
 
 function applyAbilityBarLayout() {
@@ -860,48 +968,28 @@ function layoutMachineToScreenBottom() {
 function layoutEnemy1SpineAtScreenCenter() {
     if (!enemy1Spine) return;
     enemy1Spine.scale.set(1);
-    enemy1Spine.position.set(0, 0);
+    enemy1Spine.position.set(ENEMY_ROOT_ANCHOR_X, ENEMY_ROOT_ANCHOR_Y);
     enemy1Spine.rotation = 0;
+    enemy1Spine.pivot.set(0, 0);
     try { enemy1Spine.update(0); } catch (e) {}
-    const b = enemy1Spine.getLocalBounds(_enemy1Bounds);
-    const bw = Math.max(1, b.width || 0);
-    const bh = Math.max(1, b.height || 0);
-    enemy1Spine.x = SCREEN_DESIGN_W * 0.5 - (b.x + bw * 0.5);
-    enemy1Spine.y = SCREEN_DESIGN_H * 0.5 - (b.y + bh * 0.5) + ENEMY1_OFFSET_Y;
 }
 
 function layoutEnemy1NmSpineAtScreenCenter() {
     if (!enemy1NmSpine) return;
     enemy1NmSpine.scale.set(1);
-    enemy1NmSpine.position.set(0, 0);
+    enemy1NmSpine.position.set(ENEMY_ROOT_ANCHOR_X, ENEMY_ROOT_ANCHOR_Y);
     enemy1NmSpine.rotation = 0;
+    enemy1NmSpine.pivot.set(0, 0);
     try { enemy1NmSpine.update(0); } catch (e) {}
-    if (enemy1Spine) {
-        enemy1NmSpine.x = enemy1Spine.x;
-        enemy1NmSpine.y = enemy1Spine.y;
-        return;
-    }
-    const b = enemy1NmSpine.getLocalBounds(_enemy1NmBounds);
-    const bw = Math.max(1, b.width || 0);
-    const bh = Math.max(1, b.height || 0);
-    enemy1NmSpine.x = SCREEN_DESIGN_W * 0.5 - (b.x + bw * 0.5);
-    enemy1NmSpine.y = SCREEN_DESIGN_H * 0.5 - (b.y + bh * 0.5) + ENEMY1_OFFSET_Y;
 }
 
 function layoutManSpineFromEnemyAnchor() {
     if (!manSpine) return;
     manSpine.scale.set(1);
-    manSpine.position.set(0, 0);
+    manSpine.position.set(MAN_ROOT_ANCHOR_X, MAN_ROOT_ANCHOR_Y);
     manSpine.rotation = 0;
+    manSpine.pivot.set(0, 0);
     try { manSpine.update(0); } catch (e) {}
-    const b = manSpine.getLocalBounds(_manBounds);
-    const bw = Math.max(1, b.width || 0);
-    const bh = Math.max(1, b.height || 0);
-    const anchorX = enemy1Spine ? enemy1Spine.x : SCREEN_DESIGN_W * 0.5;
-    const anchorY = enemy1Spine ? enemy1Spine.y : (SCREEN_DESIGN_H * 0.5 + ENEMY1_OFFSET_Y);
-    manSpine.pivot.set(b.x + bw * 0.5, b.y + bh * 0.5);
-    manSpine.x = anchorX;
-    manSpine.y = anchorY + MAN_OFFSET_FROM_ENEMY_Y;
 }
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -1591,7 +1679,9 @@ function applyPixiLayout() {
     const u = Math.min(w / SCREEN_DESIGN_W, h / SCREEN_DESIGN_H);
     app.stage.scale.set(u);
     app.stage.position.set((w - SCREEN_DESIGN_W * u) / 2, (h - SCREEN_DESIGN_H * u) / 2);
+    layoutEnemy1SpineAtScreenCenter();
     layoutEnemy1NmSpineAtScreenCenter();
+    layoutManSpineFromEnemyAnchor();
     placeDiceSkillsAtStageCenter();
     applyAbilityBarLayout();
     applyHeartLayout();
@@ -1691,7 +1781,14 @@ function initPixiAndSpine() {
     app.stage.mask = null;
 
     const loader = app.loader;
-    loader.add("bg1Spine", BG1_SPINE_URL).add("enemy1NmSpine", ENEMY1_NM_SPINE_URL).add("enemy1Spine", ENEMY1_SPINE_URL).add("manSpine", MAN_SPINE_URL).add("machineDownSpine", MACHINE_DOWN_SPINE_URL).add("machineUpSpine", MACHINE_UP_SPINE_URL).add("multipleSpine", MULTIPLE_SPINE_URL);
+    loader.add("bg1Spine", BG1_SPINE_URL);
+    ENEMY_WAVE_KEYS.forEach(key => {
+        const cfg = ENEMY_CONFIGS[key];
+        if (!cfg) return;
+        loader.add("enemySpine_" + key, cfg.spineUrl);
+        if (cfg.nmSpineUrl) loader.add("enemyNmSpine_" + key, cfg.nmSpineUrl);
+    });
+    loader.add("manSpine", MAN_SPINE_URL).add("machineDownSpine", MACHINE_DOWN_SPINE_URL).add("machineUpSpine", MACHINE_UP_SPINE_URL).add("multipleSpine", MULTIPLE_SPINE_URL);
     [1, 2, 3, 5, 10].forEach(m => loader.add("multTex_" + m, MULTIPLE_LABEL_IMAGE[m]));
     for (let d = 0; d <= 9; d++) loader.add("nbDigitTex_" + d, `${NB_DIGIT_IMAGE_BASE}${d}.png`);
     DICE_SPINE_SOURCES.forEach((url, i) => loader.add("diceSpine_" + i, url));
@@ -1699,11 +1796,13 @@ function initPixiAndSpine() {
     loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL);
     
     loader.load((loader, resources) => {
-        const rBg1 = resources.bg1Spine, rEnemy1Nm = resources.enemy1NmSpine, rEnemy1 = resources.enemy1Spine, rMan = resources.manSpine, rDown = resources.machineDownSpine, rUp = resources.machineUpSpine;
+        const rBg1 = resources.bg1Spine, rMan = resources.manSpine, rDown = resources.machineDownSpine, rUp = resources.machineUpSpine;
         if (!rDown?.spineData || !rUp?.spineData) {
             document.getElementById("error-msg").innerText = "⚠️ 机台 Spine 加载失败。";
             return;
         }
+        loadedMainResources = resources;
+        syncCurrentEnemyConfig();
 
         if (rBg1?.spineData) {
             bg1Spine = new PIXI.spine.Spine(rBg1.spineData);
@@ -1718,27 +1817,9 @@ function initPixiAndSpine() {
             bg1Spine = null;
         }
 
-        if (rEnemy1Nm?.spineData) {
-            enemy1NmSpine = new PIXI.spine.Spine(rEnemy1Nm.spineData);
-            enemy1NmSpine.sortableChildren = false;
-            enemy1NmSpine.visible = true;
-            enemy1NmSpine.alpha = 1;
-            layoutEnemy1NmSpineAtScreenCenter();
-        } else {
-            enemy1NmSpine = null;
-        }
-
-        if (rEnemy1?.spineData) {
-            enemy1Spine = new PIXI.spine.Spine(rEnemy1.spineData);
-            enemy1Spine.sortableChildren = false;
-            enemy1Spine.visible = true;
-            enemy1Spine.alpha = 1;
-            layoutEnemy1SpineAtScreenCenter();
-            const enemyEl = document.getElementById("enemy");
-            if (enemyEl) enemyEl.style.display = "none";
-        } else {
-            enemy1Spine = null;
-        }
+        buildCurrentEnemySpines();
+        const enemyEl = document.getElementById("enemy");
+        if (enemyEl) enemyEl.style.display = "none";
 
         if (rMan?.spineData) {
             manSpine = new PIXI.spine.Spine(rMan.spineData);
@@ -1767,9 +1848,8 @@ function initPixiAndSpine() {
         diceTrayLayer.pivot.set(DICE_TRAY_W / 2, DICE_TRAY_H / 2);
         diceTrayLayer.interactive = diceTrayLayer.interactiveChildren = false;
 
-        if (enemy1NmSpine) app.stage.addChild(enemy1NmSpine);
-        if (enemy1Spine) app.stage.addChild(enemy1Spine);
         if (manSpine) app.stage.addChild(manSpine);
+        addEnemySpinesToStage();
         app.stage.addChild(machineDownSpine);
         app.stage.addChild(diceTrayLayer);
         app.stage.addChild(machineUpSpine);
@@ -2095,12 +2175,12 @@ function renderDicePosition(d) {
 // 游戏流控制 & 牌型倍率核心计算
 // ==========================================
 function init() {
+    currentWaveIndex = 0;
+    syncCurrentEnemyConfig();
     totalRolls = GAME_DATA.initialRolls; bonusMult = 1;
     enemyMaxHp = enemyHp = GAME_DATA.enemy.baseHp; playerHp = GAME_DATA.playerMaxHp;
     hasPlayedEnemyIntro = false;
-    lastEnemyBloodWidth = 666;
-    enemyBloodCurrentWidth = 666;
-    enemyBloodLagWidth = 666;
+    resetEnemyBloodVisualState();
     updateAbilityBarFromDice(); initPixiAndSpine();
 }
 
@@ -2253,14 +2333,24 @@ async function executeTurn() {
         playerEl.classList.remove("power-up");
     }
 
-    isAnimating = false; updateUI();
-    
     if (enemyHp <= 0) {
-        setTimeout(() => alert("🎉 恶龙被击败了！勇者获胜！"), 200);
+        const hasNextWave = await advanceToNextWave();
+        if (!hasNextWave) {
+            isAnimating = false;
+            updateUI();
+            setTimeout(() => alert("🎉 所有关卡敌人已被击败！"), 200);
+        }
     } else if (playerHp <= 0) {
+        isAnimating = false;
+        updateUI();
         setTimeout(() => alert("❌ 勇者被击败了..."), 200);
     } else if (totalRolls <= 0) {
+        isAnimating = false;
+        updateUI();
         setTimeout(() => alert("❌ 投掷次数耗尽，勇者被击败了..."), 200);
+    } else {
+        isAnimating = false;
+        updateUI();
     }
 }
 

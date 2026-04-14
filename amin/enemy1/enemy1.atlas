@@ -1,139 +1,104 @@
 
 enemy1.png
-size: 968, 968
+size: 445, 445
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
-yanwu1
+cilun
   rotate: true
-  xy: 883, 807
-  size: 160, 83
-  orig: 191, 100
-  offset: 12, 9
-  index: -1
-yanwu2
-  rotate: false
-  xy: 796, 185
-  size: 170, 88
-  orig: 191, 100
-  offset: 9, 8
-  index: -1
-yanwu3
-  rotate: false
-  xy: 425, 620
-  size: 180, 95
-  orig: 191, 100
-  offset: 4, 3
-  index: -1
-yanwu4
-  rotate: false
-  xy: 608, 5
-  size: 186, 78
-  orig: 191, 100
-  offset: 0, 4
-  index: -1
-yanwu5
-  rotate: true
-  xy: 883, 620
-  size: 185, 81
-  orig: 191, 100
-  offset: 2, 1
-  index: -1
-yanwu6
-  rotate: true
-  xy: 669, 86
-  size: 187, 71
-  orig: 191, 100
-  offset: 4, 11
-  index: -1
-yanwu7
-  rotate: true
-  xy: 608, 85
-  size: 188, 59
-  orig: 191, 100
-  offset: 3, 21
-  index: -1
-yanwu8
-  rotate: false
-  xy: 425, 908
-  size: 38, 59
-  orig: 191, 100
-  offset: 149, 20
-  index: -1
-z1
-  rotate: false
-  xy: 1, 458
-  size: 422, 509
-  orig: 434, 509
+  xy: 306, 126
+  size: 16, 19
+  orig: 16, 19
   offset: 0, 0
   index: -1
-z2
-  rotate: true
-  xy: 606, 275
-  size: 180, 360
-  orig: 180, 360
-  offset: 0, 0
-  index: -1
-z3
+daya1
   rotate: false
-  xy: 875, 571
-  size: 49, 47
-  orig: 49, 47
+  xy: 327, 83
+  size: 85, 59
+  orig: 85, 59
   offset: 0, 0
   index: -1
-z4
-  rotate: true
-  xy: 470, 396
-  size: 63, 134
-  orig: 63, 134
-  offset: 0, 0
-  index: -1
-z5
-  rotate: true
-  xy: 470, 255
-  size: 139, 132
-  orig: 139, 132
-  offset: 0, 0
-  index: -1
-z6
-  rotate: true
-  xy: 607, 457
-  size: 258, 266
-  orig: 258, 267
-  offset: 0, 1
-  index: -1
-z7
+gaoyao
   rotate: false
-  xy: 425, 461
-  size: 157, 157
-  orig: 157, 157
+  xy: 395, 165
+  size: 37, 37
+  orig: 37, 37
   offset: 0, 0
   index: -1
-z8
+jiqi
   rotate: false
-  xy: 470, 52
-  size: 136, 201
-  orig: 136, 201
+  xy: 1, 310
+  size: 226, 134
+  orig: 226, 134
   offset: 0, 0
   index: -1
-z9
+shenti
   rotate: false
-  xy: 796, 20
-  size: 165, 163
-  orig: 165, 163
+  xy: 1, 125
+  size: 213, 183
+  orig: 213, 183
   offset: 0, 0
   index: -1
-组 7
+shou
+  rotate: false
+  xy: 148, 3
+  size: 164, 120
+  orig: 164, 120
+  offset: 0, 0
+  index: -1
+shou2
+  rotate: true
+  xy: 314, 6
+  size: 75, 56
+  orig: 75, 56
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 229, 236
+  size: 208, 214
+  orig: 208, 214
+  offset: 0, 0
+  index: -1
+tui1
+  rotate: false
+  xy: 306, 144
+  size: 87, 90
+  orig: 87, 90
+  offset: 0, 0
+  index: -1
+tui2
+  rotate: true
+  xy: 216, 141
+  size: 93, 88
+  orig: 93, 89
+  offset: 0, 0
+  index: -1
+weiab
   rotate: false
   xy: 1, 1
-  size: 467, 455
-  orig: 467, 455
+  size: 145, 122
+  orig: 145, 122
   offset: 0, 0
   index: -1
-组 8
+yaci
+  rotate: false
+  xy: 395, 144
+  size: 26, 19
+  orig: 26, 19
+  offset: 0, 0
+  index: -1
+yangj
+  rotate: false
+  xy: 395, 204
+  size: 39, 30
+  orig: 39, 32
+  offset: 0, 0
+  index: -1
+zuiba
   rotate: true
-  xy: 470, 717
-  size: 250, 411
-  orig: 250, 411
+  xy: 372, 29
+  size: 52, 63
+  orig: 52, 63
   offset: 0, 0
   index: -1
