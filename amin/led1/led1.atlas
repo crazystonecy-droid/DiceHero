@@ -1,0 +1,83 @@
+
+led1.png
+size: 644, 644
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+j5
+  rotate: false
+  xy: 329, 405
+  size: 263, 238
+  orig: 263, 238
+  offset: 0, 0
+  index: -1
+k1
+  rotate: false
+  xy: 168, 259
+  size: 159, 384
+  orig: 159, 384
+  offset: 0, 0
+  index: -1
+k2
+  rotate: false
+  xy: 1, 253
+  size: 165, 390
+  orig: 165, 390
+  offset: 0, 0
+  index: -1
+k3
+  rotate: false
+  xy: 567, 149
+  size: 76, 93
+  orig: 76, 93
+  offset: 0, 0
+  index: -1
+k4
+  rotate: false
+  xy: 1, 11
+  size: 226, 240
+  orig: 226, 240
+  offset: 0, 0
+  index: -1
+txt
+  rotate: false
+  xy: 594, 612
+  size: 26, 31
+  orig: 26, 31
+  offset: 0, 0
+  index: -1
+wenzi
+  rotate: true
+  xy: 483, 78
+  size: 164, 82
+  orig: 164, 82
+  offset: 0, 0
+  index: -1
+图层 57
+  rotate: true
+  xy: 329, 244
+  size: 159, 300
+  orig: 159, 300
+  offset: 0, 0
+  index: -1
+图层 58
+  rotate: true
+  xy: 229, 83
+  size: 159, 252
+  orig: 159, 252
+  offset: 0, 0
+  index: -1
+形状 13 拷贝
+  rotate: false
+  xy: 567, 96
+  size: 62, 51
+  orig: 62, 51
+  offset: 0, 0
+  index: -1
+矩形 1
+  rotate: false
+  xy: 229, 14
+  size: 164, 67
+  orig: 164, 67
+  offset: 0, 0
+  index: -1
