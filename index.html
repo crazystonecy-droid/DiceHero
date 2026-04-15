@@ -879,7 +879,7 @@ const TOURNAMENT_ENABLED = true;
 const TOURNAMENT_REWARD_SCORE_STEP = 50;
 const TOURNAMENT_REWARD_DICE_AMOUNT = 20;
 const TOURNAMENT_SCORE_BY_ONES = { 1: 2, 2: 5, 3: 10, 4: 20, 5: 50 };
-const TOURNAMENT_PROGRESS_SLIDE_X = 75;
+const TOURNAMENT_PROGRESS_SLIDE_X = 38;
 const TOURNAMENT_PROGRESS_WINDOW_SCORE = 100;
 const TOURNAMENT_PROGRESS_BAR_WIDTH = 84;
 
@@ -1403,6 +1403,7 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
     applyTournamentLayout();
     let activeWindowStart = getTournamentProgressWindowStart(prevScore);
     let currentClaimedSteps = tournamentRewardClaimedSteps;
+    let pendingRewardOverlayCount = 0;
     renderTournamentProgressMarkers(activeWindowStart);
     setTournamentProgressRatio(getTournamentProgressRatio(prevScore, activeWindowStart));
     els.tournamentProgressHost.classList.remove("is-visible");
@@ -1435,8 +1436,8 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
             await animateTournamentRewardMarker(cursorScore);
             currentClaimedSteps += 1;
             tournamentRewardClaimedSteps = currentClaimedSteps;
+            pendingRewardOverlayCount += 1;
             renderTournamentProgressMarkers(activeWindowStart);
-            await showTournamentRewardOverlayAndWait(TOURNAMENT_REWARD_DICE_AMOUNT);
             if (cursorScore < nextScore && cursorScore === windowEnd) {
                 activeWindowStart = getTournamentProgressWindowStart(cursorScore);
                 renderTournamentProgressMarkers(activeWindowStart);
@@ -1451,6 +1452,10 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
     await delay(260);
     if (token !== tournamentProgressAnimToken) return;
     els.tournamentProgressHost.classList.remove("is-visible");
+    for (let i = 0; i < pendingRewardOverlayCount; i++) {
+        if (token !== tournamentProgressAnimToken) return;
+        await showTournamentRewardOverlayAndWait(TOURNAMENT_REWARD_DICE_AMOUNT);
+    }
 }
 
 function setTournamentPanelVisible(visible) {
@@ -1690,9 +1695,14 @@ function getAbilityBarCenterPoint() {
 function layoutDiceRewardSpine() {
     if (!diceRewardSpine) return;
     const anchor = getAbilityBarCenterPoint();
-    diceRewardSpine.position.set(anchor.x, anchor.y);
+    diceRewardSpine.scale.set(1);
+    diceRewardSpine.position.set(0, 0);
     diceRewardSpine.rotation = 0;
     diceRewardSpine.pivot.set(0, 0);
+    try { diceRewardSpine.update(0); } catch (e) {}
+    const b = diceRewardSpine.getLocalBounds();
+    diceRewardSpine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
+    diceRewardSpine.position.set(anchor.x, anchor.y);
     diceRewardSpine.scale.set(anchor.scale);
     diceRewardSpine.__baseScale = anchor.scale || 1;
     try { diceRewardSpine.update(0); } catch (e) {}
