@@ -141,6 +141,8 @@
             contain: none;
             clip-path: none;
         }
+        
+        /* --- 弹窗与奖励层叠 --- */
         #end-overlay {
             position: fixed;
             inset: 0;
@@ -148,7 +150,7 @@
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            z-index: 12000;
+            z-index: 14000; /* 调高，覆盖锦标赛入口 */
             transition: opacity 180ms ease, visibility 180ms ease, background-color 180ms ease;
         }
         #end-overlay.is-visible {
@@ -170,31 +172,44 @@
             inset: 0;
             overflow: visible !important;
         }
+        
+        /* 多图标奖励展示容器 */
         #end-reward-widget {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 156px;
+            width: auto;
+            min-width: 156px;
             height: 156px;
             transform: translate(-50%, 0) scale(1);
             transform-origin: center top;
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            z-index: 12010;
+            z-index: 14010; /* 调高 */
             transition: opacity 140ms ease, visibility 140ms ease;
         }
         #end-reward-widget.is-visible {
             opacity: 1;
             visibility: visible;
         }
-        #end-reward-icon {
-            display: block;
-            width: 100%;
+        #end-reward-icons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100%;
+        }
+        .end-reward-icon-item {
+            width: 125px;
+            height: 125px;
             object-fit: contain;
+            margin-left: -40px; /* 多个图标时的折叠堆叠效果 */
             user-select: none;
             -webkit-user-drag: none;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
+        }
+        .end-reward-icon-item:first-child {
+            margin-left: 0;
         }
         #end-reward-count {
             position: absolute;
@@ -207,6 +222,7 @@
             gap: 2px;
             min-width: 56px;
             pointer-events: none;
+            z-index: 2; /* 确保数字在图标上层 */
         }
         #end-reward-count img {
             display: block;
@@ -216,12 +232,13 @@
             user-select: none;
             -webkit-user-drag: none;
         }
+
         #tournament-entry {
             position: fixed;
             left: 0;
             top: clamp(120px, 20vh, 260px);
             width: 88px;
-            min-height: 104px;
+            min-height: 84px;
             padding: 8px 6px 10px;
             border: none;
             border-radius: 20px;
@@ -232,14 +249,14 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            z-index: 13050;
+            z-index: 13050; /* 低于结算界面 14000 */
             cursor: pointer;
             transform: translate(-50%, 0);
         }
         #tournament-entry img {
             display: block;
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
             user-select: none;
             -webkit-user-drag: none;
@@ -249,18 +266,9 @@
             font-weight: 800;
             line-height: 1;
             text-align: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
-        #tournament-entry-score {
-            min-width: 74px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(255, 224, 126, 0.18);
-            color: #ffe07e;
-            font-size: 13px;
-            font-weight: 800;
-            line-height: 1.1;
-            text-align: center;
-        }
+
         #tournament-panel {
             position: fixed;
             left: 0;
@@ -300,6 +308,7 @@
             color: #ffe07e;
             font-weight: 800;
         }
+        
         #tournament-progress-mask {
             position: fixed;
             left: 0;
@@ -441,7 +450,7 @@
             inset: 0;
             pointer-events: none;
             overflow: visible;
-            z-index: 13080;
+            z-index: 13080; /* 下层特效 */
         }
         #tournament-progress-ring {
             left: 35px;
@@ -762,7 +771,6 @@
 <button id="tournament-entry" type="button" aria-controls="tournament-panel" aria-expanded="false">
     <img id="tournament-entry-icon" src="./image/faceui_icon_magic_kiddRace.png" alt="锦标赛" />
     <div id="tournament-entry-title">锦标赛</div>
-    <div id="tournament-entry-score">0分</div>
 </button>
 <div id="tournament-panel" aria-hidden="true">
     <div id="tournament-panel-title">锦标赛</div>
@@ -807,7 +815,7 @@
 <div id="end-overlay" aria-hidden="true">
     <div id="end-overlay-pixi"></div>
     <div id="end-reward-widget" aria-hidden="true">
-        <img id="end-reward-icon" src="./image/dice-icon.png" alt="" />
+        <div id="end-reward-icons"></div>
         <div id="end-reward-count">50</div>
     </div>
 </div>
@@ -861,8 +869,10 @@ const MACHINE_ANIM_UP = "machine-up";
 const MACHINE_ANIM_BOOM = "boom1";
 const END_OVERLAY_ANIM_ENTER = "enter";
 const END_OVERLAY_ANIM_WAIT = "wait";
+
 const SHENGLI_RESULT_Y_OFFSET = -800;
-const SHIBAI_RESULT_Y_OFFSET = 0;
+const SHIBAI_RESULT_Y_OFFSET = -800;
+
 const END_REWARD_OFFSET_Y = 150;
 const END_REWARD_DICE_AMOUNT = 50;
 const DICE_REWARD_ANIM = "enter6";
@@ -926,7 +936,6 @@ const DICE_SPINE_SOURCES = [
 const DICE_FACE_IMAGE_BASE = "./image/dice";
 const DICE_ALL_FACE_SLOTS = ["dice1", "dice2", "dice3", "dice4", "dice5", "dice6"];
 
-// 牌型得分配置
 const GAME_DATA = {
     playerMaxHp: 100,
     enemy: {
@@ -959,7 +968,7 @@ const ABILITY_BAR_MAX_PX = 294;
 const ABILITY_FILL_CAP_MIN_PX = 44;
 let isDiceRolling = false;
 let diceObjects = []; 
-let isMultiplePressed = false; // 用于按压状态追踪
+let isMultiplePressed = false; 
 let enemyBloodLagTimer = null;
 let lastEnemyBloodWidth = 666;
 let enemyBloodCurrentWidth = 666;
@@ -1005,11 +1014,9 @@ const els = {
     endOverlay: document.getElementById("end-overlay"),
     endOverlayPixi: document.getElementById("end-overlay-pixi"),
     endRewardWidget: document.getElementById("end-reward-widget"),
-    endRewardIcon: document.getElementById("end-reward-icon"),
     endRewardCount: document.getElementById("end-reward-count"),
     tournamentEntry: document.getElementById("tournament-entry"),
     tournamentEntryIcon: document.getElementById("tournament-entry-icon"),
-    tournamentEntryScore: document.getElementById("tournament-entry-score"),
     tournamentPanel: document.getElementById("tournament-panel"),
     tournamentPanelScore: document.getElementById("tournament-panel-score"),
     tournamentPanelNext: document.getElementById("tournament-panel-next"),
@@ -1040,7 +1047,6 @@ const els = {
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-if (els.endRewardIcon) els.endRewardIcon.src = END_REWARD_ICON_URL;
 if (els.tournamentEntryIcon) {
     els.tournamentEntryIcon.src = TOURNAMENT_ENTRY_ICON_URL;
     els.tournamentEntryIcon.addEventListener("error", () => {
@@ -1051,9 +1057,6 @@ if (els.tournamentProgressBadge) els.tournamentProgressBadge.src = TOURNAMENT_PR
 if (els.tournamentProgressRing) els.tournamentProgressRing.src = TOURNAMENT_PROGRESS_RING_URL;
 renderEndRewardCount(END_REWARD_DICE_AMOUNT);
 
-// ==========================================
-// 辅助函数 (清理动画与 Spine 工具)
-// ==========================================
 function clearSpineTrack(spine, track = 0) {
     if (!spine || !spine.state) return;
     if (typeof spine.state.setEmptyAnimation === "function") {
@@ -1109,7 +1112,7 @@ function updateTournamentUI() {
     const claimed = Math.max(0, Math.floor(tournamentRewardClaimedSteps || 0));
     const nextStepScore = (claimed + 1) * TOURNAMENT_REWARD_SCORE_STEP;
     const remain = Math.max(0, nextStepScore - score);
-    if (els.tournamentEntryScore) els.tournamentEntryScore.textContent = `${score}分`;
+    
     if (els.tournamentPanelScore) els.tournamentPanelScore.textContent = `${score}`;
     if (els.tournamentPanelNext) {
         els.tournamentPanelNext.textContent = remain > 0
@@ -1195,12 +1198,12 @@ async function animateTournamentRewardMarker(rewardScore) {
     await delay(180);
 }
 
-function showTournamentRewardOverlayAndWait(rewardAmount) {
+function showTournamentRewardOverlayAndWait(rewardAmount, tierCount = 1) {
     if (!els.endOverlay || !effectsApp || !faceuiShengliSpine) {
         addRewardDice(rewardAmount);
         return playDiceRewardAtAbilityBarCenter();
     }
-    showEndOverlay("tournament", { rewardAmount });
+    showEndOverlay("tournament", { rewardAmount, tierCount });
     return new Promise(resolve => {
         pendingTournamentOverlayResolve = resolve;
     });
@@ -1452,9 +1455,12 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
     await delay(260);
     if (token !== tournamentProgressAnimToken) return;
     els.tournamentProgressHost.classList.remove("is-visible");
-    for (let i = 0; i < pendingRewardOverlayCount; i++) {
+    
+    // 如果积累了多个领奖，一次性弹窗合并展示
+    if (pendingRewardOverlayCount > 0) {
         if (token !== tournamentProgressAnimToken) return;
-        await showTournamentRewardOverlayAndWait(TOURNAMENT_REWARD_DICE_AMOUNT);
+        const totalDiceAmount = pendingRewardOverlayCount * TOURNAMENT_REWARD_DICE_AMOUNT;
+        await showTournamentRewardOverlayAndWait(totalDiceAmount, pendingRewardOverlayCount);
     }
 }
 
@@ -1537,14 +1543,21 @@ async function applyTournamentRollOutcome(values, mult) {
     const onesCount = values.reduce((acc, value) => acc + (value === 1 ? 1 : 0), 0);
     const gainedPoints = getTournamentBonusPoints(onesCount, mult);
     if (gainedPoints <= 0) return;
+    
     const prevScore = tournamentScore;
     const nextScore = prevScore + gainedPoints;
     const totalSteps = Math.floor(nextScore / TOURNAMENT_REWARD_SCORE_STEP);
     const newSteps = Math.max(0, totalSteps - tournamentRewardClaimedSteps);
-    await playTournamentProgressSequence(gainedPoints, prevScore, nextScore, newSteps);
+    
+    // 静默更新实际积分与档位
     tournamentScore = nextScore;
     tournamentRewardClaimedSteps = totalSteps;
     updateTournamentUI();
+
+    // 只有当跨越档位，真正触发领奖时，才播放进度条和后续弹窗
+    if (newSteps > 0) {
+        await playTournamentProgressSequence(gainedPoints, prevScore, nextScore, newSteps);
+    }
 }
 
 function tickEnergyRecovery() {
@@ -1652,15 +1665,21 @@ function layoutEndResultSpine(spine) {
     if (diceSkillsSpine) placeDiceSkillsAtStageCenter();
     const baseX = diceSkillsSpine ? diceSkillsSpine.x : Math.max(1, effectsApp.renderer.width) * 0.5;
     const baseY = diceSkillsSpine ? diceSkillsSpine.y : Math.max(1, effectsApp.renderer.height) * 0.5;
-    const yOffset = (spine === shengliSpine || spine === faceuiShengliSpine) ? SHENGLI_RESULT_Y_OFFSET : SHIBAI_RESULT_Y_OFFSET;
+    
+    const yOffset = SHENGLI_RESULT_Y_OFFSET; 
+    
     spine.scale.set(1);
     spine.position.set(0, 0);
     spine.rotation = 0;
     spine.pivot.set(0, 0);
     if (diceSkillsSpine) spine.scale.copyFrom(diceSkillsSpine.scale);
     try { spine.update(0); } catch (e) {}
+    
     const b = spine.getLocalBounds();
-    spine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
+    if (b && b.width > 0 && b.height > 0) {
+        spine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
+    }
+    
     spine.position.set(baseX, baseY + yOffset);
     spine.__baseScale = spine.scale.x || 1;
     try { spine.update(0); } catch (e) {}
@@ -1693,18 +1712,22 @@ function getAbilityBarCenterPoint() {
 }
 
 function layoutDiceRewardSpine() {
-    if (!diceRewardSpine) return;
+    if (!diceRewardSpine || !effectsApp) return;
     const anchor = getAbilityBarCenterPoint();
+    
     diceRewardSpine.scale.set(1);
     diceRewardSpine.position.set(0, 0);
     diceRewardSpine.rotation = 0;
     diceRewardSpine.pivot.set(0, 0);
     try { diceRewardSpine.update(0); } catch (e) {}
-    const b = diceRewardSpine.getLocalBounds();
-    diceRewardSpine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
-    diceRewardSpine.position.set(anchor.x, anchor.y);
-    diceRewardSpine.scale.set(anchor.scale);
-    diceRewardSpine.__baseScale = anchor.scale || 1;
+    
+    const layout = getMainPixiStageScaleAndOffset();
+    const targetScale = layout.u; // 移除1.5倍放大，恢复正常大小
+    
+    diceRewardSpine.position.set(anchor.x, anchor.y); // 对齐体力条中心
+    diceRewardSpine.scale.set(targetScale);
+    diceRewardSpine.__baseScale = targetScale;
+    
     try { diceRewardSpine.update(0); } catch (e) {}
 }
 
@@ -1800,7 +1823,7 @@ async function hideEndOverlay(options = {}) {
     updateUI();
     if (shouldPlayReward) {
         addRewardDice(rewardAmount);
-        await playDiceRewardAtAbilityBarCenter();
+        await playDiceRewardAtAbilityBarCenter(); // 只飞一次奖励动画，包含所有数量
     }
     if (pendingTournamentOverlayResolve) {
         const resolve = pendingTournamentOverlayResolve;
@@ -1821,9 +1844,25 @@ function showEndOverlay(type, options = {}) {
     if (!spine) return;
     if (spine.parent !== effectsApp.stage) effectsApp.stage.addChild(spine);
     else effectsApp.stage.addChild(spine);
+    
     activeEndSpine = spine;
     activeEndOverlayType = type;
     activeEndRewardAmount = Math.max(0, Math.floor(options.rewardAmount || (type === "tournament" ? TOURNAMENT_REWARD_DICE_AMOUNT : END_REWARD_DICE_AMOUNT)));
+    
+    // 动态生成并排奖励图标
+    const tierCount = Math.max(1, Math.floor(options.tierCount || 1));
+    const iconContainer = document.getElementById('end-reward-icons');
+    if (iconContainer) {
+        iconContainer.innerHTML = '';
+        for (let i = 0; i < tierCount; i++) {
+            const img = document.createElement('img');
+            img.src = END_REWARD_ICON_URL;
+            img.className = 'end-reward-icon-item';
+            img.decoding = "async";
+            iconContainer.appendChild(img);
+        }
+    }
+
     spine.visible = true;
     try {
         clearSpineTrack(spine, 0);
@@ -1832,6 +1871,7 @@ function showEndOverlay(type, options = {}) {
     } catch (e) {}
     try { spine.update(0); } catch (e) {}
     layoutEndResultSpine(spine);
+    
     isEndOverlayVisible = true;
     isEndOverlayClosing = false;
     if (type === "win" || type === "tournament") {
@@ -1840,7 +1880,7 @@ function showEndOverlay(type, options = {}) {
     }
     els.endOverlay.classList.add("is-visible");
     els.endOverlay.style.opacity = "1";
-    if (els.effectsPixiHost) els.effectsPixiHost.style.zIndex = "13000";
+    if (els.effectsPixiHost) els.effectsPixiHost.style.zIndex = "14020"; // 最高层级覆盖
     try { effectsApp.renderer.render(effectsApp.stage); } catch (e) {}
     updateUI();
 }
@@ -2210,7 +2250,6 @@ function worldRotation(displayObject) {
     return Math.atan2(wt.b, wt.a);
 }
 
-// === 数字层位置再度向下偏移 15px（原本 170 -> 185） ===
 function syncNbFightLayerToMultiple() {
     if (!nbFightLayer || nbFxManualFly || !effectsApp) return;
     nbFightLayer.x = effectsApp.screen.width * 0.5;
@@ -2319,7 +2358,6 @@ async function playNbDigitsEndAndHide() {
     nbDigitSprites.forEach(s => s.visible = false);
 }
 
-// 接收 startPos 参数，避免因数字被隐藏而找不到发射点
 async function playBeamToPlayer(startPos) {
     if (!effectsApp) { await delay(320); return; }
     const start = startPos || getNbBeamStartClient();
@@ -2427,7 +2465,6 @@ async function lerpNbDigits(fromV, toV, ms, steps) {
     });
 }
 
-// === 修改：数字消失后不再向角色发射光束 ===
 async function playDamageFlyoutSequence(sumDice, preB, finalDmg, skillGo) {
     if (!nbFightLayer || nbDigitSprites.length === 0) {
         await delay(800);
@@ -2451,7 +2488,6 @@ async function playDamageFlyoutSequence(sumDice, preB, finalDmg, skillGo) {
         setNbDigitsClamped(finalDmg);
     }
 
-    // 字先播放消失动画
     await playNbDigitsEndAndHide();
 }
 
@@ -2745,7 +2781,6 @@ function syncMultLabelToTxtBone() {
     if (multLabelText?.visible) { multLabelText.position.copyFrom(_multSyncPt); multLabelText.rotation = rot; }
 }
 
-// === 修改：真实的按下、抬起交互 ===
 function onMultiplePointerDown() {
     if (!multipleSpine || isDiceRolling || isEndOverlayVisible || enemyHp <= 0 || playerHp <= 0) return;
     isMultiplePressed = true;
@@ -2805,7 +2840,6 @@ function wireMultipleTapOnce() {
         if (el) {
             el.interactive = true;
             el.buttonMode = true;
-            // 按下播放 down，真正点击时才切换倍率；拖出或取消只恢复状态
             el.off("pointerdown").on("pointerdown", onMultiplePointerDown);
             el.off("pointerup").on("pointerup", onMultiplePointerTap);
             el.off("pointertap").on("pointertap", onMultiplePointerTap);
