@@ -253,6 +253,30 @@
             cursor: pointer;
             transform: translate(-50%, 0);
         }
+        #tournament-entry-rank {
+            position: absolute;
+            left: 50%;
+            top: 58px;
+            transform: translate(-50%, -50%);
+            min-width: 30px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: rgba(34, 12, 0, 0.88);
+            color: #fff6bf;
+            font-family: "Arial Black", Arial, sans-serif;
+            font-size: 13px;
+            line-height: 20px;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+            transition: transform 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        }
+        #tournament-entry-rank.is-rising {
+            color: #fffef7;
+            box-shadow: 0 0 12px rgba(255, 230, 142, 0.55);
+            transform: translate(-50%, -50%) scale(1.15);
+        }
         #tournament-entry img {
             display: block;
             width: 60px;
@@ -727,6 +751,139 @@
             z-index: 3;
             pointer-events: none;
         }
+        #level-map-overlay {
+            position: fixed;
+            inset: 0;
+            background: #a46a6a;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 12000;
+            transition: opacity 180ms ease, visibility 180ms ease;
+        }
+        #level-map-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        #level-map-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 750px;
+            height: 1642px;
+            transform-origin: top left;
+            overflow: visible;
+        }
+        #level-map-paths {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .level-map-path-shadow {
+            fill: none;
+            stroke: rgba(117, 58, 58, 0.62);
+            stroke-width: 30;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .level-map-path-main {
+            fill: none;
+            stroke: rgba(133, 63, 63, 0.96);
+            stroke-width: 16;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        #level-map-pixi-host {
+            position: absolute;
+            inset: 0;
+            overflow: visible;
+        }
+        #level-map-pixi-host canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible !important;
+        }
+        #level-map-title {
+            position: absolute;
+            left: 50%;
+            top: 86px;
+            transform: translateX(-50%);
+            font-family: "Arial Black", Arial, sans-serif;
+            font-size: 34px;
+            line-height: 1;
+            color: #fff2d5;
+            text-shadow: 0 2px 0 rgba(73, 22, 22, 0.9), 0 6px 18px rgba(0, 0, 0, 0.28);
+            pointer-events: none;
+        }
+        #level-map-hint {
+            position: absolute;
+            left: 50%;
+            bottom: 86px;
+            transform: translateX(-50%);
+            padding: 0 18px;
+            border-radius: 999px;
+            background: rgba(77, 31, 31, 0.26);
+            font-size: 24px;
+            line-height: 48px;
+            color: #fff2d5;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+        }
+        #skill-toast {
+            position: fixed;
+            right: 20px;
+            top: 46%;
+            min-width: 230px;
+            max-width: min(360px, calc(100vw - 32px));
+            min-height: 72px;
+            padding: 10px 16px;
+            border-radius: 18px;
+            background: rgba(0, 0, 0, 0.42);
+            border: 2px solid rgba(0, 0, 0, 0.9);
+            box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.9), 0 8px 24px rgba(0, 0, 0, 0.28);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform-origin: right center;
+            transform: translate(110%, -50%) scale(0.5);
+            transition: opacity 180ms ease, visibility 180ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 13100;
+        }
+        #skill-toast.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(0, -50%) scale(0.5);
+        }
+        #skill-toast-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            min-width: 68px;
+        }
+        #skill-toast-icons img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        #skill-toast-text {
+            font-family: "Arial Black", Arial, sans-serif;
+            font-size: 24px;
+            line-height: 1.15;
+            color: #fff;
+            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -770,6 +927,7 @@
 
 <button id="tournament-entry" type="button" aria-controls="tournament-panel" aria-expanded="false">
     <img id="tournament-entry-icon" src="./image/faceui_icon_magic_kiddRace.png" alt="锦标赛" />
+    <div id="tournament-entry-rank">99</div>
     <div id="tournament-entry-title">锦标赛</div>
 </button>
 <div id="tournament-panel" aria-hidden="true">
@@ -819,6 +977,18 @@
         <div id="end-reward-count">50</div>
     </div>
 </div>
+<div id="level-map-overlay" aria-hidden="true">
+    <div id="level-map-stage">
+        <svg id="level-map-paths" viewBox="0 0 750 1642" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div id="level-map-pixi-host" aria-hidden="true"></div>
+        <div id="level-map-title">关卡地图</div>
+        <div id="level-map-hint">点击发光关卡进入战斗</div>
+    </div>
+</div>
+<div id="skill-toast" aria-hidden="true">
+    <div id="skill-toast-icons"></div>
+    <div id="skill-toast-text"></div>
+</div>
 
 <script>
 // ==========================================
@@ -833,11 +1003,15 @@ const FACEUI_SHENGLI_SPINE_URL = "./amin/faceui-shengli/faceui-shengli.json";
 const DICE_REWARD_SPINE_URL = "./amin/dice-reward/dice-reward.json";
 const LED1_SPINE_URL = "./amin/led1/led1.json";
 const LED2_SPINE_URL = "./amin/led2/led2.json";
+const LEVE_SPINE_URL = "./amin/leve/leve.json";
 const END_REWARD_ICON_URL = "./image/dice-icon.png";
 const TOURNAMENT_ENTRY_ICON_URL = "./image/faceui_icon_magic_kiddRace.png";
 const TOURNAMENT_DICE_ICON_URL = "./image/championship_icon01.png";
 const TOURNAMENT_PROGRESS_BADGE_URL = "./image/ranking-stubiao.png";
 const TOURNAMENT_PROGRESS_RING_URL = "./image/ranking-squan.png";
+const LED1_SLOT_IMAGE_01_URL = "./image/im01.png";
+const LED1_SLOT_IMAGE_02_URL = "./image/im02.png";
+const DICE_REWARD_OFFSET_Y = -630;
 const ENEMY_CONFIGS = {
     enemy1: {
         spineUrl: "./amin/enemy1/enemy1.json",
@@ -855,6 +1029,25 @@ const ENEMY_CONFIGS = {
     }
 };
 const ENEMY_WAVE_KEYS = ["enemy1", "enemy2"];
+const CAMPAIGN_LEVELS = [
+    { id: 0, x: 360, y: 1410, type: "normal", requires: [] },
+    { id: 1, x: 500, y: 1195, type: "normal", requires: [0] },
+    { id: 2, x: 420, y: 995, type: "normal", requires: [1] },
+    { id: 3, x: 255, y: 785, type: "normal", requires: [2] },
+    { id: 4, x: 540, y: 615, type: "special", requires: [3] },
+    { id: 5, x: 235, y: 565, type: "normal", requires: [3] },
+    { id: 6, x: 385, y: 250, type: "normal", requires: [4, 5], unlockMode: "any" }
+];
+const CAMPAIGN_LEVEL_CONNECTIONS = [
+    { from: 0, to: 1, c1x: 415, c1y: 1320, c2x: 520, c2y: 1285 },
+    { from: 1, to: 2, c1x: 520, c1y: 1120, c2x: 455, c2y: 1075 },
+    { from: 2, to: 3, c1x: 365, c1y: 920, c2x: 280, c2y: 875 },
+    { from: 3, to: 4, c1x: 210, c1y: 720, c2x: 560, c2y: 760 },
+    { from: 3, to: 5, c1x: 230, c1y: 705, c2x: 215, c2y: 640 },
+    { from: 4, to: 6, c1x: 560, c1y: 520, c2x: 500, c2y: 330 },
+    { from: 5, to: 6, c1x: 240, c1y: 430, c2x: 295, c2y: 315 }
+];
+const CAMPAIGN_LEVEL_ENEMY_KEYS = ["enemy1", "enemy2", "enemy1", "enemy2", "enemy2", "enemy1", "enemy2"];
 const MAN_SPINE_URL = "./amin/man/man.json";
 const MACHINE_SLOT_BONE = "slot";
 const PIXI_DESIGN_W = 750;
@@ -870,8 +1063,10 @@ const MACHINE_ANIM_BOOM = "boom1";
 const END_OVERLAY_ANIM_ENTER = "enter";
 const END_OVERLAY_ANIM_WAIT = "wait";
 
-const SHENGLI_RESULT_Y_OFFSET = -800;
-const SHIBAI_RESULT_Y_OFFSET = -800;
+const END_RESULT_STAGE_X = SCREEN_DESIGN_W * 0.5;
+const END_RESULT_STAGE_Y = 430;
+const SHENGLI_RESULT_Y_OFFSET = 0;
+const SHIBAI_RESULT_Y_OFFSET = 40;
 
 const END_REWARD_OFFSET_Y = 150;
 const END_REWARD_DICE_AMOUNT = 50;
@@ -892,6 +1087,10 @@ const TOURNAMENT_SCORE_BY_ONES = { 1: 2, 2: 5, 3: 10, 4: 20, 5: 50 };
 const TOURNAMENT_PROGRESS_SLIDE_X = 38;
 const TOURNAMENT_PROGRESS_WINDOW_SCORE = 100;
 const TOURNAMENT_PROGRESS_BAR_WIDTH = 84;
+const TOURNAMENT_RANK_POOL_SIZE = 50;
+const LEVE_ANIM_CLOSE = "close";
+const LEVE_ANIM_GO = "go";
+const LEVE_ANIM_OPEN = "open";
 
 const MULTIPLE_LABEL_IMAGE = {
     1: "./image/multiple1.png",
@@ -990,8 +1189,19 @@ let diceRewardSpine = null;
 let led1Spine = null;
 let led2Spine = null;
 let led2DamageText = null;
+let led1SlotSprite = null;
+let led1SlotDebugMarker = null;
+let led1SlotTextures = {};
 let led1PivotOrigin = { x: 0, y: 0 };
 let led2PivotOrigin = { x: 0, y: 0 };
+let mapApp = null;
+let levelMapNodeSpines = [];
+let levelMapNodeStateCache = [];
+let campaignCompletedLevels = [];
+let isLevelMapVisible = false;
+let pendingReturnToLevelMap = false;
+let pendingLevelMapSequence = null;
+let currentBattleLevelIndex = null;
 let activeEndSpine = null;
 let activeEndOverlayType = null;
 let activeEndRewardAmount = END_REWARD_DICE_AMOUNT;
@@ -1007,6 +1217,9 @@ let tournamentDiceIconTexture = null;
 let tournamentDiceIconReady = false;
 let originalDiceFaceTextures = {};
 let tournamentProgressAnimToken = 0;
+let fakeTournamentRank = 37;
+let tournamentRankAnimToken = 0;
+let skillToastAnimToken = 0;
 
 const els = {
     pixiCont: document.getElementById("pixi-canvas-container"),
@@ -1015,8 +1228,16 @@ const els = {
     endOverlayPixi: document.getElementById("end-overlay-pixi"),
     endRewardWidget: document.getElementById("end-reward-widget"),
     endRewardCount: document.getElementById("end-reward-count"),
+    levelMapOverlay: document.getElementById("level-map-overlay"),
+    levelMapStage: document.getElementById("level-map-stage"),
+    levelMapPaths: document.getElementById("level-map-paths"),
+    levelMapPixiHost: document.getElementById("level-map-pixi-host"),
+    skillToast: document.getElementById("skill-toast"),
+    skillToastIcons: document.getElementById("skill-toast-icons"),
+    skillToastText: document.getElementById("skill-toast-text"),
     tournamentEntry: document.getElementById("tournament-entry"),
     tournamentEntryIcon: document.getElementById("tournament-entry-icon"),
+    tournamentEntryRank: document.getElementById("tournament-entry-rank"),
     tournamentPanel: document.getElementById("tournament-panel"),
     tournamentPanelScore: document.getElementById("tournament-panel-score"),
     tournamentPanelNext: document.getElementById("tournament-panel-next"),
@@ -1107,11 +1328,91 @@ function renderEndRewardCount(value) {
     });
 }
 
+function renderEndRewardIcons(count) {
+    const iconContainer = document.getElementById("end-reward-icons");
+    if (!iconContainer) return;
+    const iconCount = Math.max(1, Math.min(1, Math.floor(count || 1)));
+    iconContainer.innerHTML = "";
+    for (let i = 0; i < iconCount; i++) {
+        const img = document.createElement("img");
+        img.src = END_REWARD_ICON_URL;
+        img.className = "end-reward-icon-item";
+        img.alt = "";
+        img.decoding = "async";
+        iconContainer.appendChild(img);
+    }
+}
+
+function updateTournamentRankUI() {
+    if (!els.tournamentEntryRank) return;
+    els.tournamentEntryRank.textContent = String(Math.max(1, Math.min(TOURNAMENT_RANK_POOL_SIZE, Math.round(fakeTournamentRank || TOURNAMENT_RANK_POOL_SIZE))));
+}
+
+async function animateTournamentRankChange(gainedPoints) {
+    if (!els.tournamentEntryRank || gainedPoints <= 0) return;
+    const token = ++tournamentRankAnimToken;
+    const startRank = Math.max(1, Math.min(TOURNAMENT_RANK_POOL_SIZE, Math.round(fakeTournamentRank || TOURNAMENT_RANK_POOL_SIZE)));
+    const riseBy = Math.max(1, Math.min(6, Math.ceil(gainedPoints / 12)));
+    const settleBack = Math.min(2, Math.floor(riseBy * 0.5));
+    const bestRank = Math.max(1, startRank - riseBy);
+    const finalRank = Math.max(1, Math.min(TOURNAMENT_RANK_POOL_SIZE, bestRank + settleBack));
+    els.tournamentEntryRank.classList.add("is-rising");
+    for (let rank = startRank - 1; rank >= bestRank; rank--) {
+        if (token !== tournamentRankAnimToken) return;
+        fakeTournamentRank = rank;
+        updateTournamentRankUI();
+        await delay(70);
+    }
+    await delay(220);
+    for (let rank = bestRank + 1; rank <= finalRank; rank++) {
+        if (token !== tournamentRankAnimToken) return;
+        fakeTournamentRank = rank;
+        updateTournamentRankUI();
+        await delay(90);
+    }
+    if (token !== tournamentRankAnimToken) return;
+    fakeTournamentRank = finalRank;
+    updateTournamentRankUI();
+    els.tournamentEntryRank.classList.remove("is-rising");
+}
+
+function renderSkillToastIcons(values) {
+    if (!els.skillToastIcons) return;
+    els.skillToastIcons.innerHTML = "";
+    (values || []).forEach(value => {
+        const faceValue = Math.max(1, Math.min(6, value | 0));
+        const img = document.createElement("img");
+        img.src = `./image/${faceValue}icon.png`;
+        img.alt = String(faceValue);
+        img.decoding = "async";
+        img.onerror = () => {
+            img.onerror = null;
+            img.src = `${DICE_FACE_IMAGE_BASE}${faceValue}.png`;
+        };
+        els.skillToastIcons.appendChild(img);
+    });
+}
+
+async function showSkillToast(values, rule) {
+    if (!els.skillToast || !els.skillToastText || !rule || rule.key === "high_card") return;
+    const token = ++skillToastAnimToken;
+    renderSkillToastIcons(values || []);
+    els.skillToastText.textContent = `${rule.name} x${rule.multiplier}`;
+    els.skillToast.classList.add("is-visible");
+    els.skillToast.setAttribute("aria-hidden", "false");
+    await delay(900);
+    if (token !== skillToastAnimToken) return;
+    els.skillToast.classList.remove("is-visible");
+    els.skillToast.setAttribute("aria-hidden", "true");
+    await delay(220);
+}
+
 function updateTournamentUI() {
     const score = Math.max(0, Math.floor(tournamentScore || 0));
     const claimed = Math.max(0, Math.floor(tournamentRewardClaimedSteps || 0));
     const nextStepScore = (claimed + 1) * TOURNAMENT_REWARD_SCORE_STEP;
     const remain = Math.max(0, nextStepScore - score);
+    updateTournamentRankUI();
     
     if (els.tournamentPanelScore) els.tournamentPanelScore.textContent = `${score}`;
     if (els.tournamentPanelNext) {
@@ -1134,10 +1435,10 @@ function getTournamentProgressRatio(score, windowStart = getTournamentProgressWi
         : 0;
 }
 
-function renderTournamentProgressMarkers(windowStart) {
+function renderTournamentProgressMarkers(windowStart, claimedSteps = tournamentRewardClaimedSteps) {
     if (!els.tournamentProgressMarkers) return;
     els.tournamentProgressMarkers.innerHTML = "";
-    const claimedScore = Math.max(0, Math.floor(tournamentRewardClaimedSteps || 0)) * TOURNAMENT_REWARD_SCORE_STEP;
+    const claimedScore = Math.max(0, Math.floor(claimedSteps || 0)) * TOURNAMENT_REWARD_SCORE_STEP;
     const markerCount = Math.max(1, Math.floor(TOURNAMENT_PROGRESS_WINDOW_SCORE / TOURNAMENT_REWARD_SCORE_STEP));
     for (let i = 1; i <= markerCount; i++) {
         const rewardScore = windowStart + i * TOURNAMENT_REWARD_SCORE_STEP;
@@ -1224,6 +1525,30 @@ function hideLed2DamageSlot() {
     try { led2Spine.skeleton.setAttachment("txt", null); } catch (e) {}
 }
 
+function getLed1SlotTextureForLevel() {
+    if (currentWaveIndex === 0) return led1SlotTextures.im01 || null;
+    if (currentWaveIndex === 1) return led1SlotTextures.im02 || null;
+    return led1SlotTextures.im02 || led1SlotTextures.im01 || null;
+}
+
+function syncLed1SlotSprite() {
+    if (!led1Spine || !led1SlotSprite) return;
+    const slotBone = led1Spine.skeleton?.findBone?.("slot");
+    const tex = getLed1SlotTextureForLevel();
+    led1SlotSprite.texture = tex || PIXI.Texture.EMPTY;
+    led1SlotSprite.visible = led1Spine.visible && !!tex;
+    if (led1SlotDebugMarker) led1SlotDebugMarker.visible = led1Spine.visible && !!slotBone;
+    if (led1SlotDebugMarker && slotBone) {
+        led1SlotDebugMarker.position.set(slotBone.worldX, slotBone.worldY);
+    }
+    if (!slotBone || !tex) return;
+    led1SlotSprite.position.set(slotBone.worldX, slotBone.worldY);
+    led1SlotSprite.rotation = typeof slotBone.getWorldRotationX === "function"
+        ? (slotBone.getWorldRotationX() * Math.PI) / 180
+        : Math.atan2(slotBone.b, slotBone.a);
+    led1SlotSprite.scale.set(1);
+}
+
 function measureSpinePivotOrigin(spine) {
     if (!spine) return { x: 0, y: 0 };
     try {
@@ -1242,9 +1567,18 @@ function measureSpinePivotOrigin(spine) {
 function syncLed2DamageText() {
     if (!led2Spine || !led2DamageText) return;
     const damage = getCurrentEnemyAttackDamage();
+    const txtBone = led2Spine.skeleton?.findBone?.("txt");
     led2DamageText.text = String(damage);
     led2DamageText.visible = led2Spine.visible;
-    led2DamageText.position.set(LED2_DAMAGE_TEXT_OFFSET_X, LED2_DAMAGE_TEXT_OFFSET_Y);
+    if (txtBone) {
+        led2DamageText.position.set(txtBone.worldX, txtBone.worldY);
+        led2DamageText.rotation = typeof txtBone.getWorldRotationX === "function"
+            ? (txtBone.getWorldRotationX() * Math.PI) / 180
+            : Math.atan2(txtBone.b, txtBone.a);
+    } else {
+        led2DamageText.position.set(LED2_DAMAGE_TEXT_OFFSET_X, LED2_DAMAGE_TEXT_OFFSET_Y);
+        led2DamageText.rotation = 0;
+    }
 }
 
 function syncLed2ToLed1SlotBone() {
@@ -1255,6 +1589,9 @@ function syncLed2ToLed1SlotBone() {
     led2Spine.rotation = 0;
     led2Spine.pivot.set(led2PivotOrigin.x, led2PivotOrigin.y);
     led2Spine.__baseScale = led2Spine.scale.x || 1;
+    if (led1SlotSprite && led1SlotSprite.parent !== led1Spine) led1Spine.addChild(led1SlotSprite);
+    if (led1SlotDebugMarker && led1SlotDebugMarker.parent !== led1Spine) led1Spine.addChild(led1SlotDebugMarker);
+    syncLed1SlotSprite();
     if (led2DamageText && led2DamageText.parent !== led2Spine) led2Spine.addChild(led2DamageText);
     hideLed2DamageSlot();
     syncLed2DamageText();
@@ -1395,19 +1732,24 @@ async function animateTournamentTokenBurst(points) {
     await Promise.all(tasks);
 }
 
-async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore, rewardSteps) {
+async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore, rewardSteps, claimedStepsBefore = tournamentRewardClaimedSteps) {
     if (!els.tournamentProgressHost) {
+        if (gainedPoints > 0) await animateTournamentTokenBurst(gainedPoints);
         for (let i = 0; i < rewardSteps; i++) {
             await showTournamentRewardOverlayAndWait(TOURNAMENT_REWARD_DICE_AMOUNT);
         }
         return;
     }
+    if (gainedPoints > 0 && rewardSteps <= 0) {
+        await animateTournamentTokenBurst(gainedPoints);
+        return;
+    }
     const token = ++tournamentProgressAnimToken;
     applyTournamentLayout();
     let activeWindowStart = getTournamentProgressWindowStart(prevScore);
-    let currentClaimedSteps = tournamentRewardClaimedSteps;
+    let currentClaimedSteps = claimedStepsBefore;
     let pendingRewardOverlayCount = 0;
-    renderTournamentProgressMarkers(activeWindowStart);
+    renderTournamentProgressMarkers(activeWindowStart, currentClaimedSteps);
     setTournamentProgressRatio(getTournamentProgressRatio(prevScore, activeWindowStart));
     els.tournamentProgressHost.classList.remove("is-visible");
     setTournamentProgressHostTransform(0, 0, 0.9);
@@ -1424,7 +1766,7 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
         const windowStart = getTournamentProgressWindowStart(cursorScore);
         if (windowStart !== activeWindowStart) {
             activeWindowStart = windowStart;
-            renderTournamentProgressMarkers(activeWindowStart);
+            renderTournamentProgressMarkers(activeWindowStart, currentClaimedSteps);
             setTournamentProgressRatio(getTournamentProgressRatio(cursorScore, activeWindowStart));
             await delay(90);
         }
@@ -1438,12 +1780,11 @@ async function playTournamentProgressSequence(gainedPoints, prevScore, nextScore
         if (cursorScore === nextRewardScore && cursorScore <= nextScore && cursorScore % TOURNAMENT_REWARD_SCORE_STEP === 0) {
             await animateTournamentRewardMarker(cursorScore);
             currentClaimedSteps += 1;
-            tournamentRewardClaimedSteps = currentClaimedSteps;
             pendingRewardOverlayCount += 1;
-            renderTournamentProgressMarkers(activeWindowStart);
+            renderTournamentProgressMarkers(activeWindowStart, currentClaimedSteps);
             if (cursorScore < nextScore && cursorScore === windowEnd) {
                 activeWindowStart = getTournamentProgressWindowStart(cursorScore);
-                renderTournamentProgressMarkers(activeWindowStart);
+                renderTournamentProgressMarkers(activeWindowStart, currentClaimedSteps);
                 setTournamentProgressRatio(getTournamentProgressRatio(cursorScore, activeWindowStart));
             }
         }
@@ -1545,6 +1886,7 @@ async function applyTournamentRollOutcome(values, mult) {
     if (gainedPoints <= 0) return;
     
     const prevScore = tournamentScore;
+    const prevClaimedSteps = tournamentRewardClaimedSteps;
     const nextScore = prevScore + gainedPoints;
     const totalSteps = Math.floor(nextScore / TOURNAMENT_REWARD_SCORE_STEP);
     const newSteps = Math.max(0, totalSteps - tournamentRewardClaimedSteps);
@@ -1554,10 +1896,8 @@ async function applyTournamentRollOutcome(values, mult) {
     tournamentRewardClaimedSteps = totalSteps;
     updateTournamentUI();
 
-    // 只有当跨越档位，真正触发领奖时，才播放进度条和后续弹窗
-    if (newSteps > 0) {
-        await playTournamentProgressSequence(gainedPoints, prevScore, nextScore, newSteps);
-    }
+    void animateTournamentRankChange(gainedPoints);
+    await playTournamentProgressSequence(gainedPoints, prevScore, nextScore, newSteps, prevClaimedSteps);
 }
 
 function tickEnergyRecovery() {
@@ -1607,7 +1947,7 @@ function updateAbilityRecoveryHint(cur, max) {
 }
 
 function syncCurrentEnemyConfig() {
-    currentEnemyKey = ENEMY_WAVE_KEYS[currentWaveIndex] || ENEMY_WAVE_KEYS[0] || "enemy1";
+    currentEnemyKey = CAMPAIGN_LEVEL_ENEMY_KEYS[currentWaveIndex] || CAMPAIGN_LEVEL_ENEMY_KEYS[0] || ENEMY_WAVE_KEYS[0] || "enemy1";
     currentEnemyConfig = ENEMY_CONFIGS[currentEnemyKey] || ENEMY_CONFIGS.enemy1;
     updateEnemyNameUI();
 }
@@ -1658,21 +1998,39 @@ function hideAllEndResultSpines() {
     activeEndSpine = null;
     activeEndOverlayType = null;
     activeEndRewardAmount = END_REWARD_DICE_AMOUNT;
+    renderEndRewardIcons(1);
+}
+
+function getEndResultYOffset(spine) {
+    if (spine === shibaiSpine) return SHIBAI_RESULT_Y_OFFSET;
+    return SHENGLI_RESULT_Y_OFFSET;
+}
+
+function getEndOverlayAnchorPoint() {
+    const layout = getMainPixiStageScaleAndOffset();
+    if (layout.rect) {
+        return {
+            x: layout.rect.left + layout.stageX + END_RESULT_STAGE_X * layout.u,
+            y: layout.rect.top + layout.stageY + END_RESULT_STAGE_Y * layout.u,
+            scale: layout.u > 0 ? layout.u : 1
+        };
+    }
+    return {
+        x: Math.max(1, effectsApp?.renderer?.width || window.innerWidth || 1) * 0.5,
+        y: Math.max(1, effectsApp?.renderer?.height || window.innerHeight || 1) * 0.5,
+        scale: 1
+    };
 }
 
 function layoutEndResultSpine(spine) {
     if (!spine || !effectsApp) return;
-    if (diceSkillsSpine) placeDiceSkillsAtStageCenter();
-    const baseX = diceSkillsSpine ? diceSkillsSpine.x : Math.max(1, effectsApp.renderer.width) * 0.5;
-    const baseY = diceSkillsSpine ? diceSkillsSpine.y : Math.max(1, effectsApp.renderer.height) * 0.5;
-    
-    const yOffset = SHENGLI_RESULT_Y_OFFSET; 
-    
+    const anchor = getEndOverlayAnchorPoint();
+    const yOffset = getEndResultYOffset(spine);
     spine.scale.set(1);
     spine.position.set(0, 0);
     spine.rotation = 0;
     spine.pivot.set(0, 0);
-    if (diceSkillsSpine) spine.scale.copyFrom(diceSkillsSpine.scale);
+    spine.scale.set(anchor.scale);
     try { spine.update(0); } catch (e) {}
     
     const b = spine.getLocalBounds();
@@ -1680,18 +2038,19 @@ function layoutEndResultSpine(spine) {
         spine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
     }
     
-    spine.position.set(baseX, baseY + yOffset);
+    spine.position.set(anchor.x, anchor.y + yOffset * anchor.scale);
     spine.__baseScale = spine.scale.x || 1;
     try { spine.update(0); } catch (e) {}
 }
 
 function layoutEndRewardWidget() {
     if (!els.endRewardWidget || !effectsApp) return;
-    if (diceSkillsSpine) placeDiceSkillsAtStageCenter();
-    const baseX = diceSkillsSpine ? diceSkillsSpine.x : Math.max(1, effectsApp.renderer.width) * 0.5;
-    const baseY = diceSkillsSpine ? diceSkillsSpine.y : Math.max(1, effectsApp.renderer.height) * 0.5;
-    els.endRewardWidget.style.left = `${baseX}px`;
-    els.endRewardWidget.style.top = `${baseY + SHENGLI_RESULT_Y_OFFSET + END_REWARD_OFFSET_Y}px`;
+    const anchor = getEndOverlayAnchorPoint();
+    const rewardYOffset = (activeEndOverlayType === "tournament" || activeEndOverlayType === "win")
+        ? SHENGLI_RESULT_Y_OFFSET
+        : SHIBAI_RESULT_Y_OFFSET;
+    els.endRewardWidget.style.left = `${anchor.x}px`;
+    els.endRewardWidget.style.top = `${anchor.y + rewardYOffset * anchor.scale + END_REWARD_OFFSET_Y * anchor.scale}px`;
     els.endRewardWidget.style.transform = "translate(-50%, 0) scale(1)";
     renderEndRewardCount(activeEndRewardAmount);
 }
@@ -1714,20 +2073,17 @@ function getAbilityBarCenterPoint() {
 function layoutDiceRewardSpine() {
     if (!diceRewardSpine || !effectsApp) return;
     const anchor = getAbilityBarCenterPoint();
-    
     diceRewardSpine.scale.set(1);
     diceRewardSpine.position.set(0, 0);
     diceRewardSpine.rotation = 0;
     diceRewardSpine.pivot.set(0, 0);
     try { diceRewardSpine.update(0); } catch (e) {}
-    
-    const layout = getMainPixiStageScaleAndOffset();
-    const targetScale = layout.u; // 移除1.5倍放大，恢复正常大小
-    
-    diceRewardSpine.position.set(anchor.x, anchor.y); // 对齐体力条中心
+    const b = diceRewardSpine.getLocalBounds();
+    diceRewardSpine.pivot.set(b.x + b.width * 0.5, b.y + b.height);
+    const targetScale = anchor.scale > 0 ? anchor.scale : 1;
+    diceRewardSpine.position.set(anchor.x, anchor.y + DICE_REWARD_OFFSET_Y * targetScale);
     diceRewardSpine.scale.set(targetScale);
     diceRewardSpine.__baseScale = targetScale;
-    
     try { diceRewardSpine.update(0); } catch (e) {}
 }
 
@@ -1768,7 +2124,6 @@ async function playDiceRewardAtAbilityBarCenter() {
     if (!diceRewardSpine || !effectsApp) return;
     const anim = pickSpineAnimName(diceRewardSpine.skeleton?.data, [DICE_REWARD_ANIM, "enter0", "enter1", "enter2"]);
     if (!anim) return;
-    layoutDiceRewardSpine();
     diceRewardSpine.visible = true;
     diceRewardSpine.alpha = 1;
     let durationMs = 700;
@@ -1780,6 +2135,7 @@ async function playDiceRewardAtAbilityBarCenter() {
         clearSpineTrack(diceRewardSpine, 0);
         diceRewardSpine.state.setAnimation(0, anim, false);
         diceRewardSpine.update(0);
+        layoutDiceRewardSpine();
     } catch (e) {
         hideDiceRewardSpine();
         return;
@@ -1830,6 +2186,12 @@ async function hideEndOverlay(options = {}) {
         pendingTournamentOverlayResolve = null;
         resolve();
     }
+    if (pendingReturnToLevelMap) {
+        pendingReturnToLevelMap = false;
+        currentBattleLevelIndex = null;
+        showLevelMapOverlay();
+        await playPendingLevelMapSequence();
+    }
     if (pendingWaveAdvance) {
         pendingWaveAdvance = false;
         await advanceToNextWave();
@@ -1848,20 +2210,8 @@ function showEndOverlay(type, options = {}) {
     activeEndSpine = spine;
     activeEndOverlayType = type;
     activeEndRewardAmount = Math.max(0, Math.floor(options.rewardAmount || (type === "tournament" ? TOURNAMENT_REWARD_DICE_AMOUNT : END_REWARD_DICE_AMOUNT)));
-    
-    // 动态生成并排奖励图标
     const tierCount = Math.max(1, Math.floor(options.tierCount || 1));
-    const iconContainer = document.getElementById('end-reward-icons');
-    if (iconContainer) {
-        iconContainer.innerHTML = '';
-        for (let i = 0; i < tierCount; i++) {
-            const img = document.createElement('img');
-            img.src = END_REWARD_ICON_URL;
-            img.className = 'end-reward-icon-item';
-            img.decoding = "async";
-            iconContainer.appendChild(img);
-        }
-    }
+    renderEndRewardIcons(tierCount);
 
     spine.visible = true;
     try {
@@ -1941,6 +2291,229 @@ async function advanceToNextWave() {
     isAnimating = false;
     updateUI();
     return true;
+}
+
+function buildLevelMapCurvePath(fromNode, toNode) {
+    return `M ${fromNode.x} ${fromNode.y} C ${fromNode.c1x} ${fromNode.c1y}, ${fromNode.c2x} ${fromNode.c2y}, ${toNode.x} ${toNode.y}`;
+}
+
+function renderLevelMapPaths() {
+    if (!els.levelMapPaths) return;
+    const paths = CAMPAIGN_LEVEL_CONNECTIONS.map(conn => {
+        const fromNode = CAMPAIGN_LEVELS[conn.from];
+        const toNode = CAMPAIGN_LEVELS[conn.to];
+        const d = buildLevelMapCurvePath(
+            { x: fromNode.x, y: fromNode.y, c1x: conn.c1x, c1y: conn.c1y, c2x: conn.c2x, c2y: conn.c2y },
+            toNode
+        );
+        return `<path class="level-map-path-shadow" d="${d}"></path><path class="level-map-path-main" d="${d}"></path>`;
+    }).join("");
+    els.levelMapPaths.innerHTML = paths;
+}
+
+function layoutLevelMapOverlay() {
+    if (!els.levelMapStage) return;
+    const layout = getMainPixiStageScaleAndOffset();
+    if (!layout.rect) return;
+    const x = layout.rect.left + layout.stageX;
+    const y = layout.rect.top + layout.stageY;
+    els.levelMapStage.style.transform = `translate(${x}px, ${y}px) scale(${layout.u})`;
+}
+
+function isCampaignLevelCompleted(levelIndex) {
+    return !!campaignCompletedLevels[levelIndex];
+}
+
+function isCampaignLevelUnlockedWithState(levelIndex, completedState) {
+    const node = CAMPAIGN_LEVELS[levelIndex];
+    if (!node) return false;
+    if (!node.requires || !node.requires.length) return true;
+    const done = node.requires.map(idx => !!completedState[idx]);
+    return node.unlockMode === "any" ? done.some(Boolean) : done.every(Boolean);
+}
+
+function isCampaignLevelUnlocked(levelIndex) {
+    return isCampaignLevelUnlockedWithState(levelIndex, campaignCompletedLevels);
+}
+
+function canSelectCampaignLevel(levelIndex) {
+    return isLevelMapVisible && !isAnimating && !isEndOverlayVisible && !isCampaignLevelCompleted(levelIndex) && isCampaignLevelUnlocked(levelIndex);
+}
+
+function getCampaignLevelAnimName(levelIndex) {
+    if (isCampaignLevelCompleted(levelIndex)) return LEVE_ANIM_OPEN;
+    if (isCampaignLevelUnlocked(levelIndex)) return LEVE_ANIM_GO;
+    return LEVE_ANIM_CLOSE;
+}
+
+function layoutLevelMapNodeSpine(spine, node) {
+    if (!spine || !node) return;
+    spine.scale.set(1);
+    spine.position.set(0, 0);
+    spine.rotation = 0;
+    spine.pivot.set(0, 0);
+    try { spine.update(0); } catch (e) {}
+    const b = spine.getLocalBounds();
+    spine.pivot.set(b.x + b.width * 0.5, b.y + b.height * 0.5);
+    spine.position.set(node.x, node.y);
+    spine.scale.set(0.72);
+    spine.__baseScale = 0.72;
+    try { spine.update(0); } catch (e) {}
+}
+
+function playLevelMapNodeAnimation(spine, animName) {
+    if (!spine?.skeleton) return;
+    const resolved = pickSpineAnimName(spine.skeleton.data, [animName]);
+    if (!resolved) return;
+    const token = (spine.__stateToken || 0) + 1;
+    spine.__stateToken = token;
+    try {
+        if (spine.__stateTimer) clearTimeout(spine.__stateTimer);
+        if (spine.state) spine.state.timeScale = 1;
+        clearSpineTrack(spine, 0);
+        spine.state.setAnimation(0, resolved, false);
+        spine.update(0);
+    } catch (e) {}
+    const durationMs = Math.ceil((getSpineAnimDurationSec(spine.skeleton.data, resolved) || 0.5) * 1000) + 20;
+    spine.__stateTimer = setTimeout(() => {
+        if (spine.__stateToken !== token) return;
+        try {
+            const track = typeof spine.state?.getCurrent === "function" ? spine.state.getCurrent(0) : null;
+            if (track && typeof track.animationEnd === "number") {
+                track.trackTime = Math.max(0, track.animationEnd - 0.001);
+            }
+            if (spine.state) spine.state.timeScale = 0;
+            spine.update(0);
+        } catch (e) {}
+    }, durationMs);
+}
+
+function getLevelMapNodeAnimDuration(spine, animName) {
+    if (!spine?.skeleton) return 500;
+    const resolved = pickSpineAnimName(spine.skeleton.data, [animName]);
+    return Math.ceil((getSpineAnimDurationSec(spine.skeleton.data, resolved || animName) || 0.5) * 1000) + 30;
+}
+
+function applyLevelMapNodeStates(force = false) {
+    levelMapNodeSpines.forEach((spine, index) => {
+        if (!spine) return;
+        const animName = getCampaignLevelAnimName(index);
+        if (force || levelMapNodeStateCache[index] !== animName) {
+            levelMapNodeStateCache[index] = animName;
+            playLevelMapNodeAnimation(spine, animName);
+        }
+        const clickable = canSelectCampaignLevel(index);
+        spine.interactive = clickable;
+        spine.buttonMode = clickable;
+        spine.cursor = clickable ? "pointer" : "default";
+        spine.alpha = clickable || isCampaignLevelCompleted(index) ? 1 : 0.92;
+    });
+}
+
+function showLevelMapOverlay(options = {}) {
+    isLevelMapVisible = true;
+    if (els.levelMapOverlay) {
+        els.levelMapOverlay.classList.add("is-visible");
+        els.levelMapOverlay.setAttribute("aria-hidden", "false");
+    }
+    if (pendingLevelMapSequence && !options.force) {
+        if (typeof pendingLevelMapSequence.completedIndex === "number") {
+            levelMapNodeStateCache[pendingLevelMapSequence.completedIndex] = getCampaignLevelAnimName(pendingLevelMapSequence.completedIndex);
+        }
+        (pendingLevelMapSequence.unlockedIndices || []).forEach(idx => {
+            levelMapNodeStateCache[idx] = getCampaignLevelAnimName(idx);
+        });
+    }
+    renderLevelMapPaths();
+    layoutLevelMapOverlay();
+    applyLevelMapNodeStates(options.force === true);
+    updateUI();
+}
+
+async function playPendingLevelMapSequence() {
+    const sequence = pendingLevelMapSequence;
+    if (!sequence) return;
+    pendingLevelMapSequence = null;
+    const completedSpine = levelMapNodeSpines[sequence.completedIndex];
+    if (completedSpine) {
+        levelMapNodeStateCache[sequence.completedIndex] = LEVE_ANIM_OPEN;
+        playLevelMapNodeAnimation(completedSpine, LEVE_ANIM_OPEN);
+        await delay(getLevelMapNodeAnimDuration(completedSpine, LEVE_ANIM_OPEN));
+    }
+    for (const idx of sequence.unlockedIndices) {
+        const spine = levelMapNodeSpines[idx];
+        if (!spine) continue;
+        levelMapNodeStateCache[idx] = LEVE_ANIM_GO;
+        playLevelMapNodeAnimation(spine, LEVE_ANIM_GO);
+        await delay(getLevelMapNodeAnimDuration(spine, LEVE_ANIM_GO));
+    }
+    applyLevelMapNodeStates(false);
+}
+
+function hideLevelMapOverlay() {
+    isLevelMapVisible = false;
+    if (els.levelMapOverlay) {
+        els.levelMapOverlay.classList.remove("is-visible");
+        els.levelMapOverlay.setAttribute("aria-hidden", "true");
+    }
+    updateUI();
+}
+
+async function startCampaignLevel(levelIndex) {
+    if (!loadedMainResources || !canSelectCampaignLevel(levelIndex)) return;
+    hideLevelMapOverlay();
+    currentBattleLevelIndex = levelIndex;
+    currentWaveIndex = levelIndex;
+    pendingReturnToLevelMap = false;
+    syncCurrentEnemyConfig();
+    enemyMaxHp = enemyHp = getCurrentEnemyBaseHp();
+    hasPlayedEnemyIntro = false;
+    resetEnemyBloodVisualState();
+    buildCurrentEnemySpines();
+    updateUI();
+    isAnimating = true;
+    await Promise.all([playLevelStartLedIntro(), playEnemyIntroOnce()]);
+    isAnimating = false;
+    updateUI();
+}
+
+function initLevelMapLayer(resources) {
+    if (mapApp || !els.levelMapPixiHost || !resources.levelNodeSpine?.spineData) return;
+    mapApp = new PIXI.Application({
+        width: SCREEN_DESIGN_W,
+        height: SCREEN_DESIGN_H,
+        transparent: true,
+        resolution: Math.min(window.devicePixelRatio || 1, 2),
+        autoDensity: true,
+        antialias: true
+    });
+    els.levelMapPixiHost.appendChild(mapApp.view);
+    mapApp.view.style.width = mapApp.view.style.height = "100%";
+    mapApp.view.style.display = "block";
+    mapApp.stage.sortableChildren = false;
+    mapApp.stage.interactive = true;
+    levelMapNodeSpines = CAMPAIGN_LEVELS.map((node, index) => {
+        const spine = new PIXI.spine.Spine(resources.levelNodeSpine.spineData);
+        spine.sortableChildren = false;
+        spine.visible = true;
+        spine.alpha = 1;
+        spine.__levelIndex = index;
+        layoutLevelMapNodeSpine(spine, node);
+        spine.on("pointertap", () => { void startCampaignLevel(index); });
+        mapApp.stage.addChild(spine);
+        return spine;
+    });
+    levelMapNodeStateCache = Array(CAMPAIGN_LEVELS.length).fill("");
+    renderLevelMapPaths();
+    layoutLevelMapOverlay();
+    applyLevelMapNodeStates(true);
+    mapApp.ticker.add(() => {
+        const dt = mapApp.ticker.deltaMS / 1000;
+        levelMapNodeSpines.forEach(spine => {
+            if (!spine) return;
+            try { spine.update(dt); } catch (e) {}
+        });
+    });
 }
 
 function applyAbilityBarLayout() {
@@ -2882,7 +3455,7 @@ function wireMachineTapTargetsOnce() {
 }
 
 function updateMachineInteractable() {
-    const can = !isAnimating && !isEndOverlayVisible && totalRolls >= bonusMult && allDiceSpineReady() && enemyHp > 0 && playerHp > 0;
+    const can = !isLevelMapVisible && !isAnimating && !isEndOverlayVisible && totalRolls >= bonusMult && allDiceSpineReady() && enemyHp > 0 && playerHp > 0;
     [machineDownSpine, machineUpSpine].forEach(m => {
         if (m) { m.interactive = m.buttonMode = can; m.cursor = can ? "pointer" : "not-allowed"; m.alpha = 1; }
     });
@@ -2891,7 +3464,7 @@ function updateMachineInteractable() {
 
 function updateMultipleInteractable() {
     if (!multipleSpine) return;
-    const can = !isDiceRolling && !isEndOverlayVisible && totalRolls > 0 && enemyHp > 0 && playerHp > 0;
+    const can = !isLevelMapVisible && !isDiceRolling && !isEndOverlayVisible && totalRolls > 0 && enemyHp > 0 && playerHp > 0;
     const a = can ? 1 : 0.45;
     [multipleSpine, multLabelSprite, multLabelText].forEach(el => {
         if (el) { el.interactive = el.buttonMode = can; el.cursor = can ? "pointer" : "not-allowed"; el.alpha = a; }
@@ -2924,6 +3497,7 @@ function applyEffectsLayout() {
     syncNbFightLayerToMultiple();
     placeDiceSkillsAtStageCenter();
     layoutLevelStartLedSpines();
+    layoutLevelMapOverlay();
 }
 
 function syncDiceTrayToSlotBone() {
@@ -3006,6 +3580,26 @@ function initEndOverlayLayer(resources) {
         led1PivotOrigin = measureSpinePivotOrigin(led1Spine);
         effectsApp.stage.addChild(led1Spine);
     }
+    led1SlotTextures.im01 = PIXI.Texture.from(LED1_SLOT_IMAGE_01_URL);
+    led1SlotTextures.im02 = PIXI.Texture.from(LED1_SLOT_IMAGE_02_URL);
+    if (!led1SlotSprite) {
+        led1SlotSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+        led1SlotSprite.anchor.set(0.5, 0.5);
+        led1SlotSprite.visible = false;
+    }
+    if (!led1SlotDebugMarker) {
+        led1SlotDebugMarker = new PIXI.Graphics();
+        led1SlotDebugMarker.lineStyle(2, 0x8f0000, 1);
+        led1SlotDebugMarker.beginFill(0xff2b2b, 0.95);
+        led1SlotDebugMarker.drawCircle(0, 0, 6);
+        led1SlotDebugMarker.endFill();
+        led1SlotDebugMarker.lineStyle(2, 0xffffff, 0.95);
+        led1SlotDebugMarker.moveTo(-10, 0);
+        led1SlotDebugMarker.lineTo(10, 0);
+        led1SlotDebugMarker.moveTo(0, -10);
+        led1SlotDebugMarker.lineTo(0, 10);
+        led1SlotDebugMarker.visible = false;
+    }
     if (resources.led2Spine?.spineData) {
         led2Spine = new PIXI.spine.Spine(resources.led2Spine.spineData);
         led2Spine.visible = false;
@@ -3079,7 +3673,7 @@ function initPixiAndSpine() {
     for (let d = 0; d <= 9; d++) loader.add("nbDigitTex_" + d, `${NB_DIGIT_IMAGE_BASE}${d}.png`);
     DICE_SPINE_SOURCES.forEach((url, i) => loader.add("diceSpine_" + i, url));
     for (let fv = 1; fv <= 6; fv++) loader.add("diceFaceTex_" + fv, `${DICE_FACE_IMAGE_BASE}${fv}.png`);
-    loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL).add("shengliSpine", SHENGLI_SPINE_URL).add("shibaiSpine", SHIBAI_SPINE_URL).add("faceuiShengliSpine", FACEUI_SHENGLI_SPINE_URL).add("diceRewardSpine", DICE_REWARD_SPINE_URL).add("led1Spine", LED1_SPINE_URL).add("led2Spine", LED2_SPINE_URL);
+    loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL).add("shengliSpine", SHENGLI_SPINE_URL).add("shibaiSpine", SHIBAI_SPINE_URL).add("faceuiShengliSpine", FACEUI_SHENGLI_SPINE_URL).add("diceRewardSpine", DICE_REWARD_SPINE_URL).add("led1Spine", LED1_SPINE_URL).add("led2Spine", LED2_SPINE_URL).add("levelNodeSpine", LEVE_SPINE_URL);
     
     loader.load((loader, resources) => {
         const rBg1 = resources.bg1Spine, rMan = resources.manSpine, rDown = resources.machineDownSpine, rUp = resources.machineUpSpine;
@@ -3164,6 +3758,7 @@ function initPixiAndSpine() {
 
         initNbDamageLayers(resources);
         initEndOverlayLayer(resources);
+        initLevelMapLayer(resources);
         setMachineIdleLoops();
         machineDownSpine.update(0); machineUpSpine.update(0);
         layoutMachineToScreenBottom();
@@ -3172,16 +3767,12 @@ function initPixiAndSpine() {
         wireMachineTapTargetsOnce();
         applyEffectsLayout();
         applyPixiLayout();
-        Promise.resolve().then(async () => {
-            isAnimating = true;
-            await Promise.all([playLevelStartLedIntro(), playEnemyIntroOnce()]);
-            isAnimating = false;
-            updateUI();
-        });
+        showLevelMapOverlay({ force: true });
+        updateUI();
         
         if (typeof ResizeObserver !== "undefined") new ResizeObserver(() => applyPixiLayout()).observe(els.pixiCont);
-        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); });
-        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); }));
+        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); });
+        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); }));
 
         app.ticker.add(() => {
             if (!machineDownSpine || !machineUpSpine) return;
@@ -3235,6 +3826,7 @@ function initPixiAndSpine() {
             if (led1Spine?.visible) {
                 try { if (led1Spine.state) led1Spine.state.timeScale = 1; } catch (e) {}
                 led1Spine.update(dt);
+                syncLed1SlotSprite();
             }
             if (led2Spine?.visible) {
                 syncLed2ToLed1SlotBone();
@@ -3488,6 +4080,9 @@ function renderDicePosition(d) {
 function init() {
     currentWaveIndex = 0;
     pendingWaveAdvance = false;
+    pendingReturnToLevelMap = false;
+    currentBattleLevelIndex = null;
+    campaignCompletedLevels = Array(CAMPAIGN_LEVELS.length).fill(false);
     tournamentScore = 0;
     tournamentRewardClaimedSteps = 0;
     syncCurrentEnemyConfig();
@@ -3626,7 +4221,10 @@ async function executeTurn() {
     const res = calculateHand(values);
     const preB = res.preBonus;
     const finalDmg = preB * bonusMult;
-    await playDiceSkillTriggerAnimations(values, res.rule);
+    await Promise.all([
+        playDiceSkillTriggerAnimations(values, res.rule),
+        showSkillToast(values, res.rule)
+    ]);
 
     await playDamageFlyoutSequence(res.sum, preB, finalDmg, res.diceSkillGo);
 
@@ -3656,7 +4254,25 @@ async function executeTurn() {
     }
 
     if (enemyHp <= 0) {
-        pendingWaveAdvance = currentWaveIndex < ENEMY_WAVE_KEYS.length - 1;
+        pendingWaveAdvance = false;
+        if (currentBattleLevelIndex !== null && currentBattleLevelIndex >= 0 && currentBattleLevelIndex < CAMPAIGN_LEVELS.length) {
+            const completedBefore = campaignCompletedLevels.slice();
+            campaignCompletedLevels[currentBattleLevelIndex] = true;
+            const unlockedIndices = CAMPAIGN_LEVELS
+                .map((_, index) => index)
+                .filter(index =>
+                    index !== currentBattleLevelIndex &&
+                    !completedBefore[index] &&
+                    !campaignCompletedLevels[index] &&
+                    !isCampaignLevelUnlockedWithState(index, completedBefore) &&
+                    isCampaignLevelUnlockedWithState(index, campaignCompletedLevels)
+                );
+            pendingLevelMapSequence = {
+                completedIndex: currentBattleLevelIndex,
+                unlockedIndices
+            };
+        }
+        pendingReturnToLevelMap = true;
         isAnimating = false;
         updateUI();
         showEndOverlay("win");

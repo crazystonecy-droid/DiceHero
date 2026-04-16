@@ -1,0 +1,118 @@
+
+leve.png
+size: 528, 528
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+caly
+  rotate: false
+  xy: 1, 144
+  size: 185, 185
+  orig: 185, 185
+  offset: 0, 0
+  index: -1
+椭圆 3
+  rotate: false
+  xy: 1, 144
+  size: 185, 185
+  orig: 185, 185
+  offset: 0, 0
+  index: -1
+caly2
+  rotate: true
+  xy: 188, 147
+  size: 182, 24
+  orig: 182, 24
+  offset: 0, 0
+  index: -1
+caly3
+  rotate: false
+  xy: 248, 376
+  size: 187, 151
+  orig: 187, 151
+  offset: 0, 0
+  index: -1
+calyz
+  rotate: false
+  xy: 248, 258
+  size: 146, 116
+  orig: 146, 116
+  offset: 0, 0
+  index: -1
+quan
+  rotate: false
+  xy: 1, 331
+  size: 245, 196
+  orig: 245, 196
+  offset: 0, 0
+  index: -1
+star
+  rotate: true
+  xy: 462, 282
+  size: 71, 64
+  orig: 71, 64
+  offset: 0, 0
+  index: -1
+v1
+  rotate: false
+  xy: 396, 275
+  size: 64, 78
+  orig: 152, 152
+  offset: 0, 74
+  index: -1
+v2
+  rotate: false
+  xy: 437, 423
+  size: 90, 104
+  orig: 152, 152
+  offset: 0, 48
+  index: -1
+v3
+  rotate: false
+  xy: 354, 133
+  size: 111, 123
+  orig: 152, 152
+  offset: 0, 29
+  index: -1
+v4
+  rotate: true
+  xy: 147, 3
+  size: 125, 137
+  orig: 152, 152
+  offset: 2, 15
+  index: -1
+v5
+  rotate: true
+  xy: 1, 12
+  size: 130, 144
+  orig: 152, 152
+  offset: 11, 4
+  index: -1
+v6
+  rotate: true
+  xy: 214, 130
+  size: 126, 138
+  orig: 152, 152
+  offset: 24, 0
+  index: -1
+v7
+  rotate: false
+  xy: 286, 4
+  size: 112, 124
+  orig: 152, 152
+  offset: 40, 0
+  index: -1
+v8
+  rotate: false
+  xy: 400, 25
+  size: 91, 106
+  orig: 152, 152
+  offset: 61, 0
+  index: -1
+v9
+  rotate: true
+  xy: 437, 355
+  size: 66, 80
+  orig: 152, 152
+  offset: 86, 0
+  index: -1

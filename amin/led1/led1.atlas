@@ -1,82 +1,96 @@
 
 led1.png
-size: 644, 644
+size: 723, 723
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
+im01
+  rotate: false
+  xy: 390, 68
+  size: 159, 253
+  orig: 159, 384
+  offset: 0, 0
+  index: -1
+im02
+  rotate: false
+  xy: 1, 29
+  size: 159, 301
+  orig: 159, 384
+  offset: 0, 0
+  index: -1
 j5
   rotate: false
-  xy: 329, 405
+  xy: 329, 484
   size: 263, 238
   orig: 263, 238
   offset: 0, 0
   index: -1
 k1
   rotate: false
-  xy: 168, 259
+  xy: 168, 338
   size: 159, 384
   orig: 159, 384
   offset: 0, 0
   index: -1
 k2
   rotate: false
-  xy: 1, 253
+  xy: 1, 332
   size: 165, 390
   orig: 165, 390
   offset: 0, 0
   index: -1
 k3
   rotate: false
-  xy: 567, 149
+  xy: 631, 410
   size: 76, 93
   orig: 76, 93
   offset: 0, 0
   index: -1
 k4
   rotate: false
-  xy: 1, 11
+  xy: 162, 81
   size: 226, 240
   orig: 226, 240
   offset: 0, 0
   index: -1
 txt
-  rotate: false
-  xy: 594, 612
+  rotate: true
+  xy: 1, 1
   size: 26, 31
   orig: 26, 31
   offset: 0, 0
   index: -1
 wenzi
   rotate: true
-  xy: 483, 78
+  xy: 594, 558
   size: 164, 82
   orig: 164, 82
   offset: 0, 0
   index: -1
 图层 57
   rotate: true
-  xy: 329, 244
+  xy: 329, 323
   size: 159, 300
   orig: 159, 300
   offset: 0, 0
   index: -1
 图层 58
-  rotate: true
-  xy: 229, 83
+  rotate: false
+  xy: 551, 69
   size: 159, 252
   orig: 159, 252
   offset: 0, 0
   index: -1
 形状 13 拷贝
   rotate: false
-  xy: 567, 96
+  xy: 594, 505
   size: 62, 51
   orig: 62, 51
   offset: 0, 0
   index: -1
 矩形 1
   rotate: false
-  xy: 229, 14
+  xy: 162, 12
   size: 164, 67
   orig: 164, 67
   offset: 0, 0
