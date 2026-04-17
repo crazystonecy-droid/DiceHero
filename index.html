@@ -131,7 +131,7 @@
             position: fixed;
             inset: 0;
             pointer-events: none;
-            z-index: 5000;
+            z-index: 13060;
             overflow: visible;
             contain: none;
             clip-path: none;
@@ -408,7 +408,7 @@
             height: 14px;
             border-radius: 7px;
             background: #1da4ea;
-            box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.18), 0 0 6px rgba(29, 164, 234, 0.2);
+            box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.18);
         }
         #tournament-progress-markers {
             position: absolute;
@@ -837,18 +837,18 @@
             position: fixed;
             right: 20px;
             top: 46%;
-            min-width: 230px;
-            max-width: min(360px, calc(100vw - 32px));
-            min-height: 72px;
-            padding: 10px 16px;
-            border-radius: 18px;
-            background: rgba(0, 0, 0, 0.42);
+            width: max-content;
+            max-width: calc(100vw - 24px);
+            min-height: 0;
+            padding: 6px 12px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.75);
             border: 2px solid rgba(0, 0, 0, 0.9);
             box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.9), 0 8px 24px rgba(0, 0, 0, 0.28);
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 8px;
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
@@ -860,26 +860,26 @@
         #skill-toast.is-visible {
             opacity: 1;
             visibility: visible;
-            transform: translate(0, -50%) scale(0.5);
+            transform: translate(0, -50%) scale(0.72);
         }
         #skill-toast-icons {
             display: flex;
             align-items: center;
             gap: 4px;
             flex-shrink: 0;
-            min-width: 68px;
+            min-width: 0;
         }
         #skill-toast-icons img {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
             user-select: none;
             -webkit-user-drag: none;
         }
         #skill-toast-text {
             font-family: "Arial Black", Arial, sans-serif;
-            font-size: 24px;
-            line-height: 1.15;
+            font-size: 16px;
+            line-height: 1;
             color: #fff;
             text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
             white-space: nowrap;
@@ -1009,8 +1009,6 @@ const TOURNAMENT_ENTRY_ICON_URL = "./image/faceui_icon_magic_kiddRace.png";
 const TOURNAMENT_DICE_ICON_URL = "./image/championship_icon01.png";
 const TOURNAMENT_PROGRESS_BADGE_URL = "./image/ranking-stubiao.png";
 const TOURNAMENT_PROGRESS_RING_URL = "./image/ranking-squan.png";
-const LED1_SLOT_IMAGE_01_URL = "./image/im01.png";
-const LED1_SLOT_IMAGE_02_URL = "./image/im02.png";
 const DICE_REWARD_OFFSET_Y = -630;
 const ENEMY_CONFIGS = {
     enemy1: {
@@ -1022,7 +1020,7 @@ const ENEMY_CONFIGS = {
     },
     enemy2: {
         spineUrl: "./amin/enemy2/enemy2.json",
-        nmSpineUrl: null,
+        nmSpineUrl: "./amin/enemy2-nm/enemy2-nm.json",
         displayName: "enemy2",
         baseHp: 12000,
         attackDamage: 8
@@ -1133,6 +1131,7 @@ const DICE_SPINE_SOURCES = [
     "./amin/dice5/dice5.json" 
 ];
 const DICE_FACE_IMAGE_BASE = "./image/dice";
+const COLOR_DICE_FACE_IMAGE_BASE = "./image/color-dice";
 const DICE_ALL_FACE_SLOTS = ["dice1", "dice2", "dice3", "dice4", "dice5", "dice6"];
 
 const GAME_DATA = {
@@ -1189,9 +1188,7 @@ let diceRewardSpine = null;
 let led1Spine = null;
 let led2Spine = null;
 let led2DamageText = null;
-let led1SlotSprite = null;
 let led1SlotDebugMarker = null;
-let led1SlotTextures = {};
 let led1PivotOrigin = { x: 0, y: 0 };
 let led2PivotOrigin = { x: 0, y: 0 };
 let mapApp = null;
@@ -1216,10 +1213,21 @@ let isTournamentPanelOpen = false;
 let tournamentDiceIconTexture = null;
 let tournamentDiceIconReady = false;
 let originalDiceFaceTextures = {};
+let colorDiceFaceTextures = {};
+let activeDiceSkillHighlightIndices = [];
 let tournamentProgressAnimToken = 0;
 let fakeTournamentRank = 37;
 let tournamentRankAnimToken = 0;
 let skillToastAnimToken = 0;
+const SKILL_TOAST_HOLD_MS = 1000;
+const SKILL_TOAST_SLOT_COUNT = 5;
+const SKILL_TOAST_EMPTY_ICON_URL = "./image/0icon.png";
+const SKILL_TOAST_EMPTY_ICON_FALLBACK_URL = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52">
+  <rect x="3" y="3" width="46" height="46" rx="10" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+  <text x="26" y="33" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="24" fill="#fff">0</text>
+</svg>
+`)}`;
 
 const els = {
     pixiCont: document.getElementById("pixi-canvas-container"),
@@ -1376,18 +1384,72 @@ async function animateTournamentRankChange(gainedPoints) {
     els.tournamentEntryRank.classList.remove("is-rising");
 }
 
-function renderSkillToastIcons(values) {
+function getSkillToastGroups(values) {
+    const groupsByValue = {};
+    (values || []).forEach((value, index) => {
+        if (!groupsByValue[value]) groupsByValue[value] = { value, count: 0, firstIndex: index };
+        groupsByValue[value].count += 1;
+    });
+    return Object.values(groupsByValue).sort((a, b) =>
+        b.count - a.count ||
+        a.firstIndex - b.firstIndex ||
+        a.value - b.value
+    );
+}
+
+function buildSkillToastIconValues(values, rule) {
+    const safeValues = Array.isArray(values) ? values.map(v => Math.max(1, Math.min(6, v | 0))) : [];
+    const groups = getSkillToastGroups(safeValues);
+    let displayValues = [];
+    switch (rule?.key) {
+        case "one_pair":
+            displayValues = groups[0] ? [groups[0].value, groups[0].value] : [];
+            break;
+        case "two_pair":
+            displayValues = groups.slice(0, 2).flatMap(group => [group.value, group.value]);
+            break;
+        case "three_kind":
+            displayValues = groups[0] ? [groups[0].value, groups[0].value, groups[0].value] : [];
+            break;
+        case "four_kind":
+            displayValues = groups[0] ? [groups[0].value, groups[0].value, groups[0].value, groups[0].value] : [];
+            break;
+        case "five_kind":
+            displayValues = groups[0] ? [groups[0].value, groups[0].value, groups[0].value, groups[0].value, groups[0].value] : [];
+            break;
+        case "full_house":
+            displayValues = groups.slice(0, 2).flatMap(group => Array(group.count).fill(group.value));
+            break;
+        case "large_straight":
+        case "small_straight":
+        case "all_odd":
+        case "all_even":
+        default:
+            displayValues = [...safeValues].sort((a, b) => a - b);
+            break;
+    }
+    while (displayValues.length < SKILL_TOAST_SLOT_COUNT) displayValues.push(0);
+    return displayValues.slice(0, SKILL_TOAST_SLOT_COUNT);
+}
+
+function getSkillToastText(rule) {
+    if (!rule) return "";
+    return `${rule.name} 伤害x${rule.multiplier}`;
+}
+
+function renderSkillToastIcons(values, rule) {
     if (!els.skillToastIcons) return;
     els.skillToastIcons.innerHTML = "";
-    (values || []).forEach(value => {
-        const faceValue = Math.max(1, Math.min(6, value | 0));
+    buildSkillToastIconValues(values, rule).forEach(value => {
+        const faceValue = Math.max(0, Math.min(6, value | 0));
+        const isEmptyIcon = faceValue === 0;
         const img = document.createElement("img");
-        img.src = `./image/${faceValue}icon.png`;
+        img.src = isEmptyIcon ? SKILL_TOAST_EMPTY_ICON_URL : `./image/${faceValue}icon.png`;
         img.alt = String(faceValue);
         img.decoding = "async";
         img.onerror = () => {
             img.onerror = null;
-            img.src = `${DICE_FACE_IMAGE_BASE}${faceValue}.png`;
+            img.src = isEmptyIcon ? SKILL_TOAST_EMPTY_ICON_FALLBACK_URL : `${DICE_FACE_IMAGE_BASE}${faceValue}.png`;
         };
         els.skillToastIcons.appendChild(img);
     });
@@ -1396,11 +1458,11 @@ function renderSkillToastIcons(values) {
 async function showSkillToast(values, rule) {
     if (!els.skillToast || !els.skillToastText || !rule || rule.key === "high_card") return;
     const token = ++skillToastAnimToken;
-    renderSkillToastIcons(values || []);
-    els.skillToastText.textContent = `${rule.name} x${rule.multiplier}`;
+    renderSkillToastIcons(values || [], rule);
+    els.skillToastText.textContent = getSkillToastText(rule);
     els.skillToast.classList.add("is-visible");
     els.skillToast.setAttribute("aria-hidden", "false");
-    await delay(900);
+    await delay(SKILL_TOAST_HOLD_MS);
     if (token !== skillToastAnimToken) return;
     els.skillToast.classList.remove("is-visible");
     els.skillToast.setAttribute("aria-hidden", "true");
@@ -1525,30 +1587,6 @@ function hideLed2DamageSlot() {
     try { led2Spine.skeleton.setAttachment("txt", null); } catch (e) {}
 }
 
-function getLed1SlotTextureForLevel() {
-    if (currentWaveIndex === 0) return led1SlotTextures.im01 || null;
-    if (currentWaveIndex === 1) return led1SlotTextures.im02 || null;
-    return led1SlotTextures.im02 || led1SlotTextures.im01 || null;
-}
-
-function syncLed1SlotSprite() {
-    if (!led1Spine || !led1SlotSprite) return;
-    const slotBone = led1Spine.skeleton?.findBone?.("slot");
-    const tex = getLed1SlotTextureForLevel();
-    led1SlotSprite.texture = tex || PIXI.Texture.EMPTY;
-    led1SlotSprite.visible = led1Spine.visible && !!tex;
-    if (led1SlotDebugMarker) led1SlotDebugMarker.visible = led1Spine.visible && !!slotBone;
-    if (led1SlotDebugMarker && slotBone) {
-        led1SlotDebugMarker.position.set(slotBone.worldX, slotBone.worldY);
-    }
-    if (!slotBone || !tex) return;
-    led1SlotSprite.position.set(slotBone.worldX, slotBone.worldY);
-    led1SlotSprite.rotation = typeof slotBone.getWorldRotationX === "function"
-        ? (slotBone.getWorldRotationX() * Math.PI) / 180
-        : Math.atan2(slotBone.b, slotBone.a);
-    led1SlotSprite.scale.set(1);
-}
-
 function measureSpinePivotOrigin(spine) {
     if (!spine) return { x: 0, y: 0 };
     try {
@@ -1589,9 +1627,7 @@ function syncLed2ToLed1SlotBone() {
     led2Spine.rotation = 0;
     led2Spine.pivot.set(led2PivotOrigin.x, led2PivotOrigin.y);
     led2Spine.__baseScale = led2Spine.scale.x || 1;
-    if (led1SlotSprite && led1SlotSprite.parent !== led1Spine) led1Spine.addChild(led1SlotSprite);
     if (led1SlotDebugMarker && led1SlotDebugMarker.parent !== led1Spine) led1Spine.addChild(led1SlotDebugMarker);
-    syncLed1SlotSprite();
     if (led2DamageText && led2DamageText.parent !== led2Spine) led2Spine.addChild(led2DamageText);
     hideLed2DamageSlot();
     syncLed2DamageText();
@@ -1620,6 +1656,7 @@ async function playLevelStartLedIntro() {
     const token = ++levelStartLedAnimToken;
     const spines = [led1Spine, led2Spine];
     let durationMs = 0;
+    const led1EnterName = currentWaveIndex === 0 ? "enter1" : currentWaveIndex === 1 ? "enter2" : "enter2";
     layoutLevelStartLedSpines();
     spines.forEach(spine => {
         if (spine === led2Spine) return;
@@ -1629,7 +1666,7 @@ async function playLevelStartLedIntro() {
         spine.alpha = 1;
         try {
             clearSpineTrack(spine, 0);
-            const enter = pickSpineAnimName(spine.skeleton?.data, ["enter"]);
+            const enter = pickSpineAnimName(spine.skeleton?.data, [led1EnterName, "enter"]);
             if (enter) {
                 durationMs = Math.max(durationMs, Math.ceil((getSpineAnimDurationSec(spine.skeleton.data, enter) || 0.5) * 1000) + 40);
                 spine.state.setAnimation(0, enter, false);
@@ -1824,8 +1861,9 @@ function wireTournamentEntryOnce() {
 }
 
 function refreshTournamentDiceFaces() {
+    const highlighted = new Set(activeDiceSkillHighlightIndices || []);
     diceObjects.forEach(d => {
-        if (d?.spineAnim) applyDicePhysicallyCorrectFaces(d.spineAnim, Math.max(1, d.val || 1));
+        if (d?.spineAnim) applyDicePhysicallyCorrectFaces(d.spineAnim, Math.max(1, d.val || 1), { colored: highlighted.has(d.id) });
     });
 }
 
@@ -1871,6 +1909,14 @@ function loadTournamentDiceIconTexture() {
 function getTournamentFaceTexture(value) {
     if (TOURNAMENT_ENABLED && value === 1 && tournamentDiceIconReady && textureUsable(tournamentDiceIconTexture)) return tournamentDiceIconTexture;
     return originalDiceFaceTextures[value] || diceFaceTextures[value] || null;
+}
+
+function getDiceFaceTexture(value, options = {}) {
+    const faceValue = Math.max(1, Math.min(6, value | 0));
+    if (options.colored && faceValue !== 1 && textureUsable(colorDiceFaceTextures[faceValue])) {
+        return colorDiceFaceTextures[faceValue];
+    }
+    return getTournamentFaceTexture(faceValue);
 }
 
 function getTournamentBonusPoints(oneCount, mult) {
@@ -2247,8 +2293,7 @@ function destroyCurrentEnemySpines() {
 
 function addEnemySpinesToStage() {
     if (!app) return;
-    const beforeIndex = manSpine && manSpine.parent === app.stage ? app.stage.getChildIndex(manSpine) : app.stage.children.length;
-    if (enemy1NmSpine) app.stage.addChildAt(enemy1NmSpine, Math.min(beforeIndex, app.stage.children.length));
+    if (enemy1NmSpine && effectsApp?.stage) effectsApp.stage.addChild(enemy1NmSpine);
     const enemyIndex = manSpine && manSpine.parent === app.stage ? app.stage.getChildIndex(manSpine) : app.stage.children.length;
     if (enemy1Spine) app.stage.addChildAt(enemy1Spine, Math.min(enemyIndex, app.stage.children.length));
 }
@@ -2536,6 +2581,17 @@ function applyHeartLayout() {
     els.heartHpHost.style.transform = `translate(-50%, -50%) scale(${layout.u})`;
 }
 
+function applySkillToastLayout() {
+    if (!els.skillToast || !els.pixiCont) return;
+    const layout = getMainPixiStageScaleAndOffset();
+    if (!layout.rect) return;
+    const heartCenterX = layout.rect.left + layout.stageX + (SCREEN_DESIGN_W - 85) * layout.u;
+    const heartCenterY = layout.rect.top + layout.stageY + (SCREEN_DESIGN_H - 425) * layout.u - 100;
+    const mirroredRight = Math.max(18, window.innerWidth - heartCenterX - 8 * layout.u);
+    els.skillToast.style.right = `${mirroredRight}px`;
+    els.skillToast.style.top = `${heartCenterY}px`;
+}
+
 function applyTournamentLayout() {
     if (!els.tournamentEntry || !els.pixiCont) return;
     const layout = getMainPixiStageScaleAndOffset();
@@ -2780,9 +2836,13 @@ function layoutEnemy1SpineAtScreenCenter() {
 }
 
 function layoutEnemy1NmSpineAtScreenCenter() {
-    if (!enemy1NmSpine) return;
-    enemy1NmSpine.scale.set(1);
-    enemy1NmSpine.position.set(ENEMY_ROOT_ANCHOR_X, ENEMY_ROOT_ANCHOR_Y);
+    if (!enemy1NmSpine || !effectsApp) return;
+    const layout = getMainPixiStageScaleAndOffset();
+    const anchorX = layout.rect ? layout.rect.left + layout.stageX + ENEMY_ROOT_ANCHOR_X * layout.u : ENEMY_ROOT_ANCHOR_X;
+    const anchorY = layout.rect ? layout.rect.top + layout.stageY + ENEMY_ROOT_ANCHOR_Y * layout.u : ENEMY_ROOT_ANCHOR_Y;
+    const scale = layout.rect ? layout.u : 1;
+    enemy1NmSpine.scale.set(scale);
+    enemy1NmSpine.position.set(anchorX, anchorY);
     enemy1NmSpine.rotation = 0;
     enemy1NmSpine.pivot.set(0, 0);
     try { enemy1NmSpine.update(0); } catch (e) {}
@@ -3302,11 +3362,13 @@ function facePipLayoutForTop(topValue) {
     return { dice1: T, dice5: bottom, dice2: rest[0], dice4: rest[3], dice3: rest[1], dice6: rest[2] };
 }
 
-function applyDicePhysicallyCorrectFaces(spineAnim, topValue) {
+function applyDicePhysicallyCorrectFaces(spineAnim, topValue, options = {}) {
     if (!spineAnim || typeof spineAnim.hackTextureBySlotName !== "function") return;
     const layout = facePipLayoutForTop(topValue);
     DICE_ALL_FACE_SLOTS.forEach(slot => {
-        const tex = getTournamentFaceTexture(layout[slot]);
+        const tex = options.colored && slot !== "dice1"
+            ? getTournamentFaceTexture(layout[slot])
+            : getDiceFaceTexture(layout[slot], options);
         if (tex) spineAnim.hackTextureBySlotName(slot, tex, null);
     });
 }
@@ -3485,6 +3547,7 @@ function applyPixiLayout() {
     placeDiceSkillsAtStageCenter();
     applyAbilityBarLayout();
     applyHeartLayout();
+    applySkillToastLayout();
     applyTournamentLayout();
     applyEnemyBloodLayout();
 }
@@ -3494,6 +3557,7 @@ function applyEffectsLayout() {
     const w = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
     const h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
     effectsApp.renderer.resize(w, h);
+    layoutEnemy1NmSpineAtScreenCenter();
     syncNbFightLayerToMultiple();
     placeDiceSkillsAtStageCenter();
     layoutLevelStartLedSpines();
@@ -3580,13 +3644,6 @@ function initEndOverlayLayer(resources) {
         led1PivotOrigin = measureSpinePivotOrigin(led1Spine);
         effectsApp.stage.addChild(led1Spine);
     }
-    led1SlotTextures.im01 = PIXI.Texture.from(LED1_SLOT_IMAGE_01_URL);
-    led1SlotTextures.im02 = PIXI.Texture.from(LED1_SLOT_IMAGE_02_URL);
-    if (!led1SlotSprite) {
-        led1SlotSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
-        led1SlotSprite.anchor.set(0.5, 0.5);
-        led1SlotSprite.visible = false;
-    }
     if (!led1SlotDebugMarker) {
         led1SlotDebugMarker = new PIXI.Graphics();
         led1SlotDebugMarker.lineStyle(2, 0x8f0000, 1);
@@ -3672,7 +3729,10 @@ function initPixiAndSpine() {
     [1, 2, 3, 5, 10].forEach(m => loader.add("multTex_" + m, MULTIPLE_LABEL_IMAGE[m]));
     for (let d = 0; d <= 9; d++) loader.add("nbDigitTex_" + d, `${NB_DIGIT_IMAGE_BASE}${d}.png`);
     DICE_SPINE_SOURCES.forEach((url, i) => loader.add("diceSpine_" + i, url));
-    for (let fv = 1; fv <= 6; fv++) loader.add("diceFaceTex_" + fv, `${DICE_FACE_IMAGE_BASE}${fv}.png`);
+    for (let fv = 1; fv <= 6; fv++) {
+        loader.add("diceFaceTex_" + fv, `${DICE_FACE_IMAGE_BASE}${fv}.png`);
+        loader.add("colorDiceFaceTex_" + fv, `${COLOR_DICE_FACE_IMAGE_BASE}${fv}.png`);
+    }
     loader.add("diceSkillsSpine", DICESKILLS_SPINE_URL).add("nbSpine", NB_SPINE_URL).add("multLingSpine", MULT_LING_SPINE_URL).add("shengliSpine", SHENGLI_SPINE_URL).add("shibaiSpine", SHIBAI_SPINE_URL).add("faceuiShengliSpine", FACEUI_SHENGLI_SPINE_URL).add("diceRewardSpine", DICE_REWARD_SPINE_URL).add("led1Spine", LED1_SPINE_URL).add("led2Spine", LED2_SPINE_URL).add("levelNodeSpine", LEVE_SPINE_URL);
     
     loader.load((loader, resources) => {
@@ -3771,8 +3831,8 @@ function initPixiAndSpine() {
         updateUI();
         
         if (typeof ResizeObserver !== "undefined") new ResizeObserver(() => applyPixiLayout()).observe(els.pixiCont);
-        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); });
-        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); }));
+        window.addEventListener("resize", () => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); applySkillToastLayout(); });
+        window.addEventListener("orientationchange", () => requestAnimationFrame(() => { applyEffectsLayout(); applyPixiLayout(); applyEndOverlayLayout(); layoutLevelMapOverlay(); applySkillToastLayout(); }));
 
         app.ticker.add(() => {
             if (!machineDownSpine || !machineUpSpine) return;
@@ -3794,6 +3854,7 @@ function initPixiAndSpine() {
             syncMachineLayerTransforms();
             syncMultipleToMachineUpAnchor();
             syncDiceTrayToSlotBone();
+            syncActiveDiceSkillFaces();
             
             if (multipleSpine) {
                 multipleSpine.update(dt);
@@ -3826,7 +3887,6 @@ function initPixiAndSpine() {
             if (led1Spine?.visible) {
                 try { if (led1Spine.state) led1Spine.state.timeScale = 1; } catch (e) {}
                 led1Spine.update(dt);
-                syncLed1SlotSprite();
             }
             if (led2Spine?.visible) {
                 syncLed2ToLed1SlotBone();
@@ -3854,10 +3914,14 @@ function initPixiAndSpine() {
 
         diceFaceTextures = {};
         originalDiceFaceTextures = {};
+        colorDiceFaceTextures = {};
         for (let fv = 1; fv <= 6; fv++) {
             if (resources["diceFaceTex_" + fv]?.texture) {
                 diceFaceTextures[fv] = resources["diceFaceTex_" + fv].texture;
                 originalDiceFaceTextures[fv] = resources["diceFaceTex_" + fv].texture;
+            }
+            if (resources["colorDiceFaceTex_" + fv]?.texture) {
+                colorDiceFaceTextures[fv] = resources["colorDiceFaceTex_" + fv].texture;
             }
         }
         loadTournamentDiceIconTexture();
@@ -3996,12 +4060,24 @@ function throwDice() {
     if (!allDiceSpineReady()) { isDiceRolling = false; updateUI(); return Promise.resolve([1, 2, 3, 4, 5]); }
     playMachineRollThenIdle();
     shuffleDicePositionsOnTray();
+    const suspenseDieId = diceObjects.length > 1 ? Math.floor(Math.random() * diceObjects.length) : -1;
 
     diceObjects.forEach(obj => {
+        const isSuspenseDie = obj.id === suspenseDieId;
+        const speedMul = isSuspenseDie ? 1.12 : 1;
+        const bounceMul = isSuspenseDie ? 1.08 : 1;
         obj.val = Math.ceil(Math.random() * 6);
         applyDicePhysicallyCorrectFaces(obj.spineAnim, obj.val);
-        obj.z = Math.random() * 20 + 30; obj.vx = (Math.random() - 0.5) * 22; obj.vy = (Math.random() - 0.5) * 22; obj.vz = Math.random() * 5 + 6;
-        obj.angle = Math.random() * 360; obj.vAngle = (Math.random() - 0.5) * 60; obj.spinAccumDeg = 0; obj.isMoving = true;
+        obj.z = Math.random() * 20 + 30;
+        obj.vx = ((Math.random() - 0.5) * 22) * speedMul;
+        obj.vy = ((Math.random() - 0.5) * 22) * speedMul;
+        obj.vz = (Math.random() * 5 + 6) * bounceMul;
+        obj.angle = Math.random() * 360;
+        obj.vAngle = ((Math.random() - 0.5) * 60) * speedMul;
+        obj.spinAccumDeg = 0;
+        obj.isMoving = true;
+        obj.isSuspenseDie = isSuspenseDie;
+        obj.groundFriction = isSuspenseDie ? Math.min(0.9, PHYSICS.friction + 0.08) : PHYSICS.friction;
         try { obj.spineAnim.state.setAnimation(0, "idle", true); } catch (e) {}
     });
 
@@ -4024,7 +4100,7 @@ function throwDice() {
                 
                 d.vz -= PHYSICS.gravity; d.z += d.vz;
                 if(d.z <= 0) { d.z = 0; d.vz = -d.vz * PHYSICS.floorRestitution; if(Math.abs(d.vz) < 1.5) d.vz = 0; }
-                if (d.z === 0) { d.vx *= PHYSICS.friction; d.vy *= PHYSICS.friction; d.vAngle = d.angle = 0; }
+                if (d.z === 0) { d.vx *= (d.groundFriction || PHYSICS.friction); d.vy *= (d.groundFriction || PHYSICS.friction); d.vAngle = d.angle = 0; }
                 if (d.z > 0) {
                     const rem = PHYSICS.maxSpinPerRollDeg - (d.spinAccumDeg || 0);
                     if (rem <= 0) d.vAngle = 0; else if (Math.abs(d.vAngle) > rem) d.vAngle = Math.sign(d.vAngle) * rem;
@@ -4036,7 +4112,8 @@ function throwDice() {
                 if (d.x < tb.minX || d.x > tb.maxX) { d.x = d.x < tb.minX ? tb.minX : tb.maxX; d.vx = -d.vx * PHYSICS.bounceFriction; if (d.z > 0) d.vAngle += (Math.random() - 0.5) * 30; }
                 if (d.y < tb.minY || d.y > tb.maxY) { d.y = d.y < tb.minY ? tb.minY : tb.maxY; d.vy = -d.vy * PHYSICS.bounceFriction; if (d.z > 0) d.vAngle += (Math.random() - 0.5) * 30; }
 
-                if (d.z === 0 && Math.abs(d.vx) < 0.1 && Math.abs(d.vy) < 0.1 && Math.abs(d.vAngle) < 0.5) {
+                const stopThreshold = d.isSuspenseDie ? 0.04 : 0.1;
+                if (d.z === 0 && Math.abs(d.vx) < stopThreshold && Math.abs(d.vy) < stopThreshold && Math.abs(d.vAngle) < 0.5) {
                     d.isMoving = false; d.vx = d.vy = d.vz = d.vAngle = d.angle = 0;
                     try {
                         const skinName = "dice" + d.val;
@@ -4130,6 +4207,28 @@ function resetDiceSkillAnimations() {
     });
 }
 
+function clearDiceSkillFaceHighlights() {
+    activeDiceSkillHighlightIndices = [];
+    refreshTournamentDiceFaces();
+}
+
+function applyDiceSkillFaceHighlights(values, rule) {
+    const indices = getDiceHighlightIndices(values, rule);
+    if (!indices.length) {
+        activeDiceSkillHighlightIndices = [];
+        refreshTournamentDiceFaces();
+        return indices;
+    }
+    activeDiceSkillHighlightIndices = indices.slice();
+    refreshTournamentDiceFaces();
+    return indices;
+}
+
+function syncActiveDiceSkillFaces() {
+    if (!activeDiceSkillHighlightIndices || !activeDiceSkillHighlightIndices.length) return;
+    refreshTournamentDiceFaces();
+}
+
 function getDiceHighlightIndices(values, rule) {
     if (!values || !values.length || !rule) return [];
     const indicesByValue = {};
@@ -4158,7 +4257,7 @@ function getDiceHighlightIndices(values, rule) {
 
 async function playDiceSkillTriggerAnimations(values, rule) {
     resetDiceSkillAnimations();
-    const indices = getDiceHighlightIndices(values, rule);
+    const indices = applyDiceSkillFaceHighlights(values, rule);
     if (!indices.length) return;
     const tasks = indices.map((i, order) => (async () => {
         const d = diceObjects[i];
@@ -4170,9 +4269,13 @@ async function playDiceSkillTriggerAnimations(values, rule) {
             clearSpineTrack(d.spineAnim, 0);
             if (enter) {
                 d.spineAnim.state.setAnimation(0, enter, false);
+                d.spineAnim.update(0);
+                applyDicePhysicallyCorrectFaces(d.spineAnim, Math.max(1, d.val || 1), { colored: true });
                 if (idle) d.spineAnim.state.addAnimation(0, idle, true, 0);
             } else if (idle) {
                 d.spineAnim.state.setAnimation(0, idle, true);
+                d.spineAnim.update(0);
+                applyDicePhysicallyCorrectFaces(d.spineAnim, Math.max(1, d.val || 1), { colored: true });
             }
         } catch (e) {
             setSingleDieIdleLoop(d);
@@ -4213,11 +4316,11 @@ function calculateHand(values) {
 async function executeTurn() {
     if (isAnimating || totalRolls < bonusMult || !allDiceSpineReady() || enemyHp <= 0) return;
     isAnimating = isDiceRolling = true;
+    clearDiceSkillFaceHighlights();
     resetDiceSkillAnimations();
     totalRolls -= bonusMult; updateUI();
 
     const values = await throwDice();
-    await applyTournamentRollOutcome(values, bonusMult);
     const res = calculateHand(values);
     const preB = res.preBonus;
     const finalDmg = preB * bonusMult;
@@ -4240,17 +4343,25 @@ async function executeTurn() {
     playerEl.classList.remove("power-up", "attack-anim");
     enemyEl.classList.remove("shake");
     resetDiceSkillAnimations();
+    const tournamentOutcomePromise = applyTournamentRollOutcome(values, bonusMult);
 
     if (enemyHp > 0 && playerHp > 0) {
-        await delay(180);
-        const enemyAttackPromise = playEnemy1AttackThenIdle();
-        playManHitThenIdle();
-        await enemyAttackPromise;
-        playerHp = Math.max(0, playerHp - getCurrentEnemyAttackDamage());
-        updateUI();
-        playerEl.classList.add("power-up");
-        await delay(220);
-        playerEl.classList.remove("power-up");
+        await Promise.all([
+            tournamentOutcomePromise,
+            (async () => {
+                await delay(180);
+                const enemyAttackPromise = playEnemy1AttackThenIdle();
+                playManHitThenIdle();
+                await enemyAttackPromise;
+                playerHp = Math.max(0, playerHp - getCurrentEnemyAttackDamage());
+                updateUI();
+                playerEl.classList.add("power-up");
+                await delay(220);
+                playerEl.classList.remove("power-up");
+            })()
+        ]);
+    } else {
+        await tournamentOutcomePromise;
     }
 
     if (enemyHp <= 0) {

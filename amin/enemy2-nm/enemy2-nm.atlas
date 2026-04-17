@@ -1,0 +1,69 @@
+
+enemy2-nm.png
+size: 1328, 1328
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+zhujs0
+  rotate: false
+  xy: 1, 966
+  size: 725, 361
+  orig: 725, 365
+  offset: 0, 4
+  index: -1
+zhujs1
+  rotate: true
+  xy: 728, 601
+  size: 726, 295
+  orig: 726, 295
+  offset: 0, 0
+  index: -1
+zhujs2
+  rotate: true
+  xy: 1025, 601
+  size: 726, 295
+  orig: 726, 295
+  offset: 0, 0
+  index: -1
+zhujs3
+  rotate: true
+  xy: 1, 238
+  size: 726, 295
+  orig: 726, 295
+  offset: 0, 0
+  index: -1
+zhujs4
+  rotate: true
+  xy: 298, 238
+  size: 726, 295
+  orig: 726, 295
+  offset: 0, 0
+  index: -1
+图层 49 拷贝 3
+  rotate: false
+  xy: 595, 309
+  size: 732, 290
+  orig: 732, 295
+  offset: 0, 0
+  index: -1
+曲线 1 拷贝
+  rotate: false
+  xy: 595, 309
+  size: 732, 290
+  orig: 732, 295
+  offset: 0, 0
+  index: -1
+图层 49 拷贝 4
+  rotate: false
+  xy: 595, 17
+  size: 732, 290
+  orig: 732, 295
+  offset: 0, 0
+  index: -1
+曲线 1
+  rotate: false
+  xy: 595, 17
+  size: 732, 290
+  orig: 732, 295
+  offset: 0, 0
+  index: -1
